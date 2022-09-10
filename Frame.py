@@ -28,11 +28,26 @@ class frame():
             Take file object as argument and separates the molecule into atoms for processing"""
             
             self.raw_data = file_object
+            self.atoms = [frame.molecule.atom(line) for line in self.raw_data]
 
         def print_data(self):
             """Function to check the functionality of the molecular class"""
 
             print(len(self.raw_data))
+
+        class atom():
+            """Molecule is consist of atoms, this class is mainly used for analysing,
+            every line of in the molecule object is an atom"""
+
+            def __init__(self,line:str):
+                """Constructor of the atom class, define the atomic mass and xyz position of the atom from the line"""
+
+                self.data = line
+
+            def print_data(self):
+
+                print(self.data)
+
 
     def print_attributes(self):
         """This method can be used to check the attributes of the data"""
@@ -46,6 +61,7 @@ def main():
     frame0 = frame('Frames/DBT1-00')
     frame0.print_attributes()
     frame0.molecules.print_data()
+    frame0.molecules.atoms[0].print_data()
 
 if(__name__=='__main__'):
 
