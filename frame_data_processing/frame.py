@@ -1,10 +1,13 @@
 """This module is used to process the frame object into data that can be loaded"""
+from typing import Generator
+from frame_data_processing.molecule import molecule
 
 class frame():
     """The frame class contains the frame number, all the molecules number and also the sides of the box of the frame"""
-    def __init__(self, path:str, working_dir:str = '.') -> None:
+    def __init__(self, path:str, working_dir:str = '.', molecule_size:int=56) -> None:
         """The constructor to read all the data from the text file, take path of the file as argument"""
 
+        self.molecule_size = molecule_size
         with open(path) as frame_data:
 
         #do some processing first to cleanup unused line
@@ -16,38 +19,25 @@ class frame():
             #The step number will be used to  construct the folder name for the molecules and pairs
             
             self.number_of_line = next(frame_data) #this is the number of line to be read as molecular data
+
             molecular_data = frame_data.readlines()
-            self.molecules=frame.molecule(molecular_data[:-1])
             self.box_data = molecular_data[-1]
 
-    class molecule():
-        """This is a inner class to store the molecular data"""
+            molecular_data_to_process = molecular_data[:-1]
+            list_of_molecule = self.molecule_split(molecular_data_to_process)
+            self.molecules=[molecule(m) for m in list_of_molecule]
 
-        def __init__(self,file_object)->None:
-            """Constructor of the molecule object.
-            Take file object as argument and separates the molecule into atoms for processing"""
-            
-            self.raw_data = file_object
-            self.atoms = [frame.molecule.atom(line) for line in self.raw_data]
+    def molecule_split(self, raw_data)->list[list[str]]:
+        """This function splits the aggregated molecular raw data into single molecule
+        as for now the number of atoms in a molecule is known and fixed"""
 
-        def print_data(self):
-            """Function to check the functionality of the molecular class"""
+        def split(list_to_split:list[str],chunk_size:int)->Generator:
+            """generator to split the data"""
 
-            print(len(self.raw_data))
+            for i in range(0,len(list_to_split), chunk_size):
+                yield list_to_split[i:i+chunk_size]
 
-        class atom():
-            """Molecule is consist of atoms, this class is mainly used for analysing,
-            every line of in the molecule object is an atom"""
-
-            def __init__(self,line:str):
-                """Constructor of the atom class, define the atomic mass and xyz position of the atom from the line"""
-
-                self.data = line
-
-            def print_data(self):
-
-                print(self.data)
-
+        return list(split(raw_data,self.molecule_size))
 
     def print_attributes(self):
         """This method can be used to check the attributes of the data"""
@@ -55,14 +45,5 @@ class frame():
         print(f'directory to save = {self.dir_name}')
         print(f'number of lines to save = {self.number_of_line}')
         print(f'box data = {self.box_data}')
+        print(f'no of atoms in a single molecule = {self.molecule_size}')
 
-def main():
-
-    frame0 = frame('Frames/DBT1-00')
-    frame0.print_attributes()
-    frame0.molecules.print_data()
-    frame0.molecules.atoms[0].print_data()
-
-if(__name__=='__main__'):
-
-    main()
