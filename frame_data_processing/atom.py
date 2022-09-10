@@ -6,8 +6,9 @@ class atom():
         """Constructor of the atom class, define the atomic mass and xyz position of the atom from the line"""
 
         data = line.split()
-        self.name = data[0]
-        self.element = data[1]
+        #this line extract the element from the string, currently it is fine to take the first character only as this will be faster
+        #and there is no element with 2 character currently
+        self.element = data[1][0]
         
         #as the index of the atom will get mix up with the element at high number, it is ignored here
         self.x = data[-3]
@@ -16,7 +17,6 @@ class atom():
 
     def print_data(self):
 
-        print(f'name = {self.name}')
         print(f'atom = {self.element}')
         print(f'xyz coordinate = {self.x},{self.y},{self.z}')
 
