@@ -15,10 +15,10 @@ class atom():
         self.y = float(data[-2])
         self.z = float(data[-1])
     
-    def get_coordinates(self)->tuple(float):
+    def get_coordinates(self)->tuple[float]:
         """getter function that return the xyz coordinates of the atom"""
 
-        return (self.x, self.y, self.z)
+        return self.x, self.y, self.z
 
     def print_data(self):
 
