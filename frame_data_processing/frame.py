@@ -18,6 +18,7 @@ class frame():
         self.molecule_size = molecule_size
         self.distance_cut_off = cut_off_distance
         self.Use_full_CM = Use_full_CM
+        print(path)
 
         with open(path) as frame_data:
 

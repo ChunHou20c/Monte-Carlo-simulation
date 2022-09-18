@@ -13,24 +13,24 @@ def save_cm(frame:frame.frame, numerator_matrix:np.ndarray)->None:
 def main():
 
     #project setup
-    working_dir = '/home/chunhou/Documents/FYP'
+    working_dir = '/lustre/user/chunhou/FYP_data'
+    data_dir = '/home/user/chunhou/time'
     molecule_size=56
-    files = listdir('Frames')
-    
+    files = listdir(data_dir)
     #setting up multiprocessing
     num_workers = mp.cpu_count()
     pool = mp.Pool(num_workers)
     
     #this part is to prevent recalculation of numerator matrix
-    frame0 = frame.frame(f'Frames/{files[0]}', working_dir=working_dir,
+    frame0 = frame.frame(f'{data_dir}/{files[0]}', working_dir=working_dir,
             molecule_size=molecule_size, cut_off_distance= 1.2,
             Use_full_CM = False)
 
     numerator_matrix = frame.gen_numerator_matrix(frame0, False)
-
+    save_cm(frame0, numerator_matrix)
     for file in files:
         print(file)       
-        Frame = frame.frame(f'Frames/{file}', working_dir=working_dir,
+        Frame = frame.frame(f'{data_dir}/{file}', working_dir=working_dir,
                 molecule_size=molecule_size,
                 cut_off_distance=1.2,
                 Use_full_CM=False)
