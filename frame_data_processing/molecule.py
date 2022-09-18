@@ -1,5 +1,7 @@
 from frame_data_processing.atom import atom
 from frame_data_processing import atom as Atom
+from frame_data_processing import gen_coulomb_matrix
+import numpy as np
 
 class molecule():
     """This is a inner class to store the molecular data as this class is used for DBT1 the index for S and N atoms are fixed
@@ -25,6 +27,15 @@ class molecule():
         """getter function to return the name of the molecule with index for example 1DBT, 2DBT"""
 
         return self.name
+
+    def get_xyz_list(self)-> tuple[list[float], list[float], list[float]]:
+
+        x_list = [i.x for i in self.atoms]
+        y_list = [i.y for i in self.atoms]
+        z_list = [i.z for i in self.atoms]
+
+        return x_list, y_list, z_list
+    
 
 def distance(m1:molecule,m2:molecule)->float:
     """This method calculates the distance between the two molecule"""
