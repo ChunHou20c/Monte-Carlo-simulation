@@ -22,13 +22,18 @@ def main():
     pool = mp.Pool(num_workers)
     
     #this part is to prevent recalculation of numerator matrix
-    frame0 = frame.frame(f'Frames/{files[0]}', working_dir=working_dir, molecule_size=molecule_size)
-    numerator_matrix = frame.gen_numerator_matrix(frame0)
+    frame0 = frame.frame(f'Frames/{files[0]}', working_dir=working_dir,
+            molecule_size=molecule_size, cut_off_distance= 1.2,
+            Use_full_CM = False)
 
-    print(numerator_matrix)
+    numerator_matrix = frame.gen_numerator_matrix(frame0, False)
+
     for file in files:
-        
-        Frame = frame.frame(f'Frames/{file}', working_dir=working_dir, molecule_size=molecule_size)
+        print(file)       
+        Frame = frame.frame(f'Frames/{file}', working_dir=working_dir,
+                molecule_size=molecule_size,
+                cut_off_distance=1.2,
+                Use_full_CM=False)
         
         pool.apply_async(save_cm, args=(Frame, numerator_matrix))
 

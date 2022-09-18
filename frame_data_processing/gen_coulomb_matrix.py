@@ -3,21 +3,50 @@ import numpy as np
 class CoulombMatrix:
     """This class is used to construct the full coulomb matrix object"""
 
-    def __init__(self, x:np.ndarray, y:np.ndarray, z:np.ndarray, numerator_matrix:np.ndarray, Use_full_CM = True) -> None:
+    def __init__(self, x1:list[float], x2:list[float],
+            y1:list[float], y2:list[float],
+            z1:list[float], z2:list[float],
+            numerator_matrix:np.ndarray,
+            molecular_size:int,
+            Use_full_CM = True) -> None:
         """Constructor of the coulomb matrix object, take x, y, and z coordinate matrix to generate the coulomb matrix
+        Please make sure the size of the numerator matrix is the same as the requested coulomb matrix size
+        the expected x, y, z inputs are a list of x, y, z coordinates"""
 
-        the expected x, y, z inputs are a 2 dimensional full array"""
-        
-        self.x = x
-        self.xT = x.T
-        self.y = y
-        self.yT = y.T
-        self.z = z
-        self.zT = z.T
         self.numerator_matrix = numerator_matrix
-        
-        #currently the use_full_CM is not handled
-        
+
+        if(Use_full_CM):
+            x_list = x1 + x2 
+            y_list = y1 + y2
+            z_list = z1 + z2
+
+            x = np.tile(x_list,(molecular_size*2,1))
+            y = np.tile(y_list,(molecular_size*2,1))
+            z = np.tile(z_list,(molecular_size*2,1))
+
+            self.x = x
+            self.xT = x.T
+            self.y = y
+            self.yT = y.T
+            self.z = z
+            self.zT = z.T
+
+        else:
+            
+            x1_array = np.tile(x1,(molecular_size,1))
+            x2_array = np.tile(x2,(molecular_size,1))
+            y1_array = np.tile(y1,(molecular_size,1))
+            y2_array = np.tile(y2,(molecular_size,1))
+            z1_array = np.tile(z1,(molecular_size,1))
+            z2_array = np.tile(z2,(molecular_size,1))
+
+            self.x = x1_array
+            self.xT = x2_array.T
+            self.y = y1_array
+            self.yT = y2_array.T
+            self.z = z1_array
+            self.zT = z2_array.T
+
     def gen_CM(self):
         """This function generate the numpy array with the calculated coulomb matrix"""
         

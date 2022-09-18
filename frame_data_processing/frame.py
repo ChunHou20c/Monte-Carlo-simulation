@@ -8,11 +8,16 @@ from functools import lru_cache
 
 class frame():
     """The frame class contains the frame number, all the molecules number and also the sides of the box of the frame"""
-    def __init__(self, path:str, working_dir:str = '.', molecule_size:int=56, cut_off_distance:float = 1.2) -> None:
+    def __init__(self, path:str,
+            working_dir:str = '.',
+            molecule_size:int=56,
+            cut_off_distance:float = 1.2,
+            Use_full_CM:bool = True) -> None:
         """The constructor to read all the data from the text file, take path of the file as argument"""
 
         self.molecule_size = molecule_size
         self.distance_cut_off = cut_off_distance
+        self.Use_full_CM = Use_full_CM
 
         with open(path) as frame_data:
 
@@ -49,23 +54,25 @@ class frame():
         """This function generate the list of matrix template for the coulomb matrix generation"""
 
         CM_list = []
-        matrix_size = self.molecule_size*2
         for molecule1, molecule2 in itertools.combinations(self.molecules,2):
         
             molecular_distance = molecule.distance(molecule1,molecule2)
             if (molecular_distance<= self.distance_cut_off):
 
-                x_list = [i.x for i in molecule1.atoms] + [i.x for i in molecule2.atoms]
-                y_list = [i.y for i in molecule1.atoms] + [i.y for i in molecule2.atoms]
-                z_list = [i.z for i in molecule1.atoms] + [i.z for i in molecule2.atoms]
+                x1 = [i.x for i in molecule1.atoms]
+                x2 = [i.x for i in molecule2.atoms]
+                y1 = [i.y for i in molecule1.atoms]
+                y2 = [i.y for i in molecule2.atoms]
+                z1 = [i.z for i in molecule1.atoms]
+                z2 = [i.z for i in molecule2.atoms]
 
-
-                x = np.tile(x_list,(matrix_size,1))
-                y = np.tile(y_list,(matrix_size,1))
-                z = np.tile(z_list,(matrix_size,1))
                 #generate coulomb matrix here
-                
-                cm = gen_coulomb_matrix.CoulombMatrix(x,y,z,numerator_matrix)
+                cm = gen_coulomb_matrix.CoulombMatrix(x1, x2,
+                        y1, y2,
+                        z1, z2,
+                        numerator_matrix,
+                        self.molecule_size,
+                        self.Use_full_CM)
                 
                 matrix = cm.gen_CM()
                 CM_list.append(matrix)
@@ -81,13 +88,21 @@ class frame():
         print(f'no of atoms in a single molecule = {self.molecule_size}')
     
 @lru_cache(maxsize=1)    
-def gen_numerator_matrix(frame:frame)->np.ndarray:
+def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:
     """this method is used to get product of charge 1 and charge 2, as all the molecules are the same,
-    there is only one numerator matrix throughout the program"""
+    there is only one numerator matrix throughout the program
+
+    use full matrix only when it is necessary (the file will be big)"""
     element_list=[i.element for i in frame.molecules[0].atoms]
-    element_matrix = np.tile(element_list*2,(frame.molecule_size*2,1))
-    charge_matrix = gen_coulomb_matrix.charge_vect(element_matrix, element_matrix.T, False)
-    diagonal_elements = gen_coulomb_matrix.charge_vect(np.array(element_list*2),np.array(element_list*2), True)
-    np.fill_diagonal(charge_matrix,diagonal_elements)
+
+    if(not use_full_matrix):
+        element_matrix = np.tile(element_list,(frame.molecule_size,1))
+        charge_matrix = gen_coulomb_matrix.charge_vect(element_matrix, element_matrix.T, False)
+
+    else:
+        element_matrix = np.tile(element_list*2,(frame.molecule_size*2,1))
+        diagonal_elements = gen_coulomb_matrix.charge_vect(np.array(element_list*2),np.array(element_list*2), True)
+        charge_matrix = gen_coulomb_matrix.charge_vect(element_matrix, element_matrix.T, False)
+        np.fill_diagonal(charge_matrix,diagonal_elements)
 
     return charge_matrix
