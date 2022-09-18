@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 
 class CoulombMatrix:
@@ -57,24 +56,3 @@ def gen_cm(distance, charge1, charge2)->float:
     return 0.5*charge1**2.4
 
 gen_cm_vect = np.vectorize(gen_cm,otypes=[float],cache=True)
-
-#char_to_charge = np.vectorize(char_to_charge,otypes=[object],cache=False)
-#pos_matrix_x=np.indices((MATRIX_SIZE,MATRIX_SIZE))[0] 
-#
-#
-#CM_list = []
-#
-#for files in sys.argv[1:]:
-#    data = pd.read_csv(files,delimiter='\\s+',on_bad_lines='skip',names=[i for i in range(9)],skipfooter=1,engine='python')
-#    data['charge'] = char_to_charge(data[1])
-#
-#    #create the matrices for vectorized function gen_matrix
-#    x = np.tile(list(data.iloc[:][3]),(MATRIX_SIZE,1))
-#    y = np.tile(list(data.iloc[:][4]),(MATRIX_SIZE,1))
-#    z = np.tile(list(data.iloc[:][5]),(MATRIX_SIZE,1))
-#    Charge = np.tile(list(data['charge']),(MATRIX_SIZE,1))
-#    
-#    CM_list.append(gen_CM(pos_matrix_x, pos_matrix_x.T, x, x.T, y, y.T, z, z.T, Charge, Charge.T))
-#
-#
-#np.save('input_feature.npy',CM_list)

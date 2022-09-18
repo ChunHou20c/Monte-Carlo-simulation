@@ -1,7 +1,5 @@
 from frame_data_processing.atom import atom
 from frame_data_processing import atom as Atom
-from frame_data_processing import gen_coulomb_matrix
-import numpy as np
 
 class molecule():
     """This is a inner class to store the molecular data as this class is used for DBT1 the index for S and N atoms are fixed
