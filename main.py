@@ -1,20 +1,39 @@
-from frame_data_processing.frame import frame
-from frame_data_processing import molecule
-import itertools
+from frame_data_processing import frame
+import  multiprocessing as mp
+import numpy as np
+from os import listdir
+
+def save_cm(frame:frame.frame, numerator_matrix:np.ndarray)->None:
+    """Function that is used to save the npy file at the end of coulomb matrix generation, use mainly for multiprocessing"""
+
+    list_of_cm = frame.gen_cm_list(numerator_matrix)
+    file_name = f'{frame.dir_name}'
+    np.save(file_name,list_of_cm)
 
 def main():
 
-    frame0 = frame('Frames/DBT1-00', working_dir='/home/chunhou/Documents/FYP' ,molecule_size=56)
-    frame0.print_attributes()
+    #project setup
+    working_dir = '/home/chunhou/Documents/FYP'
+    molecule_size=56
+    files = listdir('Frames')
     
-    distance_cut_off = 1.2
-    for molecule1, molecule2 in itertools.combinations(frame0.molecules,2):
+    #setting up multiprocessing
+    num_workers = mp.cpu_count()
+    pool = mp.Pool(num_workers)
+    
+    #this part is to prevent recalculation of numerator matrix
+    frame0 = frame.frame(f'Frames/{files[0]}', working_dir=working_dir, molecule_size=molecule_size)
+    numerator_matrix = frame.gen_numerator_matrix(frame0)
+
+    print(numerator_matrix)
+    for file in files:
         
-        molecular_distance = molecule.distance(molecule1,molecule2)
-        if (molecular_distance<= distance_cut_off):
+        Frame = frame.frame(f'Frames/{file}', working_dir=working_dir, molecule_size=molecule_size)
+        
+        pool.apply_async(save_cm, args=(Frame, numerator_matrix))
 
-            print(f'pair{molecule1.get_name()},{molecule2.get_name()} -  distance : {molecular_distance}')
-
+    pool.close()
+    pool.join()
 
 if(__name__=='__main__'):
 
