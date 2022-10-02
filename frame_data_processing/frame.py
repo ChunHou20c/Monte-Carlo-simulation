@@ -8,6 +8,7 @@ from functools import lru_cache
 
 class frame():
     """The frame class contains the frame number, all the molecules number and also the sides of the box of the frame"""
+
     def __init__(self, path:str,
             working_dir:str = '.',
             molecule_size:int=56,
@@ -33,7 +34,11 @@ class frame():
             self.number_of_line = next(frame_data) #this is the number of line to be read as molecular data
 
             molecular_data = frame_data.readlines()
-            self.box_data = molecular_data[-1]
+            box_data = molecular_data[-1].split()
+            
+            self.x_boundary = float(box_data[0])
+            self.y_boundary = float(box_data[1])
+            self.z_boundary = float(box_data[2])
 
             molecular_data_to_process = molecular_data[:-1]
             list_of_molecule = self.molecule_split(molecular_data_to_process)
@@ -53,10 +58,14 @@ class frame():
 
     def gen_cm_list(self, numerator_matrix:np.ndarray)->list[np.ndarray]:
         """This function generate the list of matrix template for the coulomb matrix generation"""
+        
+
+        molecules_to_compare = [m for m in self.molecules if self.is_close_to_boundary(m) == False] 
 
         CM_list = []
-        for molecule1, molecule2 in itertools.combinations(self.molecules,2):
-        
+        for molecule1, molecule2 in itertools.combinations(molecules_to_compare,2):
+            
+
             molecular_distance = molecule.distance(molecule1,molecule2)
             if (molecular_distance<= self.distance_cut_off):
 
@@ -85,8 +94,23 @@ class frame():
         
         print(f'directory to save = {self.dir_name}')
         print(f'number of lines to save = {self.number_of_line}')
-        print(f'box data = {self.box_data}')
+        print(f'box data = {self.x_boundary}, {self.y_boundary}, {self.z_boundary}')
         print(f'no of atoms in a single molecule = {self.molecule_size}')
+
+    def is_close_to_boundary(self, molecule:molecule.molecule)->bool:
+        """This function check if the molecule is close to the bondary so that it can be excluded"""
+
+        if (molecule.atoms[molecule.N_index].x < 1 or molecule.atoms[molecule.N_index].x > self.x_boundary - 1):
+            return True
+
+        if (molecule.atoms[molecule.N_index].y < 1 or molecule.atoms[molecule.N_index].y > self.y_boundary - 1):
+            return True
+
+        if (molecule.atoms[molecule.N_index].z < 1 or molecule.atoms[molecule.N_index].z > self.z_boundary - 1):
+            return True
+
+        return False
+
     
 @lru_cache(maxsize=1)    
 def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:
