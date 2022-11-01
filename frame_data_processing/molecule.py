@@ -1,7 +1,7 @@
 from frame_data_processing.atom import atom
 from frame_data_processing import atom as Atom
 
-class molecule():
+class molecule:
     """This is a inner class to store the molecular data as this class is used for DBT1 the index for S and N atoms are fixed
     to use this class for other molecule, the atom indices need to be changed"""
     S1_index = 43

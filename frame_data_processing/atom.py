@@ -1,4 +1,4 @@
-class atom():
+class atom:
     """Molecule is consist of atoms, this class is mainly used for analysing,
             every line of in the molecule object is an atom"""
 

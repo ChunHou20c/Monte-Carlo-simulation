@@ -3,12 +3,64 @@ import  multiprocessing as mp
 import numpy as np
 from os import listdir
 
-def save_cm(frame:frame.frame, numerator_matrix:np.ndarray)->None:
-    """Function that is used to save the npy file at the end of coulomb matrix generation, use mainly for multiprocessing"""
+def save_cm(frame:frame.frame, numerator_matrix:np.ndarray, filter:str="close to border")->None:
+    """Function that is used to save the npy file at the end of coulomb matrix generation, use mainly for multiprocessing
+    filter: str = "close to border" or "cut by boundary" """
 
-    list_of_cm = frame.gen_cm_list(numerator_matrix)
+    if (filter == "close to border"):
+
+        func = frame.is_close_to_boundary
+
+    elif (filter == "cut by boundary"):
+
+        func = frame.is_cut_by_boundary
+
+    elif (filter == "no filter"):
+        
+        def _func(*arg):
+            
+            return False
+
+        func = _func
+
+    else:
+
+        print("invalid function!")
+        return
+
+    list_of_cm = frame.gen_cm_list(numerator_matrix, func)
     file_name = f'{frame.dir_name}'
     np.save(file_name,list_of_cm)
+
+def check_molecule(frame:frame.frame, type:str, filter:str)->None:
+    """Function to check the molecular data"""
+
+    if (filter == "close to border"):
+
+        func = frame.is_close_to_boundary
+
+    elif (filter == "cut by boundary"):
+
+        func = frame.is_cut_by_boundary
+
+    elif (filter == "no filter"):
+        
+        def _func(*arg):
+
+            return False
+            
+        func = _func
+
+    else:
+
+        print("invalid function!")
+        return
+
+    for molecule in frame.molecules:
+
+        if (frame.is_cut_by_boundary(molecule)):
+
+            print(molecule.raw_data)
 
 def main():
 
@@ -35,7 +87,7 @@ def main():
                 cut_off_distance=1.2,
                 Use_full_CM=False)
         
-        pool.apply_async(save_cm, args=(Frame, numerator_matrix))
+        pool.apply_async(save_cm, args=(Frame, numerator_matrix, "cut by boundary"))
 
     pool.close()
     pool.join()

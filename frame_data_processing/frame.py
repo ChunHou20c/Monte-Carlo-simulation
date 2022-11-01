@@ -1,7 +1,7 @@
 """This module is used to process the frame object into data that can be loaded"""
 import itertools
 import numpy as np
-from typing import Generator
+from typing import Callable, Generator
 from frame_data_processing import molecule
 from frame_data_processing import gen_coulomb_matrix
 from functools import lru_cache
@@ -56,11 +56,13 @@ class frame():
 
         return list(split(raw_data,self.molecule_size))
 
-    def gen_cm_list(self, numerator_matrix:np.ndarray)->list[np.ndarray]:
-        """This function generate the list of matrix template for the coulomb matrix generation"""
+    def gen_cm_list(self, numerator_matrix:np.ndarray, func:Callable)->list[np.ndarray]:
+        """This function generate the list of matrix template for the coulomb matrix generation
+        func is a function for filtering molecule
+        use self.is_close_to_border of self.is_cut_by_boundary"""
         
 
-        molecules_to_compare = [m for m in self.molecules if self.is_close_to_boundary(m) == False] 
+        molecules_to_compare = [m for m in self.molecules if func(m) == False] 
 
         CM_list = []
         for molecule1, molecule2 in itertools.combinations(molecules_to_compare,2):
@@ -111,6 +113,31 @@ class frame():
 
         return False
 
+    def is_cut_by_boundary(self, molecule:molecule.molecule)->bool:
+        """This method check if the molecule is cut in half by the boundary condition
+        
+        this method works by first getting the list of xyz coordinate from the molecule,
+        which is obtained from get_xyz_list method in the molecule class
+
+        if the range of the data is large (max - min more than limit then the molecule must be cut in border)"""
+
+        limit = 5
+
+        x, y, z = molecule.get_xyz_list()
+
+        if (max(x) - min(x) > limit):
+
+            return True
+        
+        if (max(y) - min(y) > limit):
+
+            return True
+
+        if (max(z) - min(z) > limit):
+
+            return True
+
+        return False
     
 @lru_cache(maxsize=1)    
 def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:
