@@ -2,7 +2,7 @@ from frame_data_processing.atom import atom
 from frame_data_processing import atom as Atom
 
 class molecule:
-    """This is a inner class to store the molecular data as this class is used for DBT1 the index for S and N atoms are fixed
+    """This is a class to store the molecular data as this class is used for DBT1 the index for S and N atoms are fixed
     to use this class for other molecule, the atom indices need to be changed"""
     S1_index = 43
     S2_index = 6
@@ -18,8 +18,15 @@ class molecule:
 
     def print_data(self):
         """Function to check the functionality of the molecular class"""
+        
+        return_string = ''
 
-        print(len(self.raw_data))
+        for line in self.raw_data:
+
+            print(line.replace('\n', ''))
+            return_string+=line
+
+        return return_string
 
     def get_name(self):
         """getter function to return the name of the molecule with index for example 1DBT, 2DBT"""

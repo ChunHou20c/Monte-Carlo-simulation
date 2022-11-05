@@ -32,7 +32,7 @@ def save_cm(frame:frame.frame, numerator_matrix:np.ndarray, filter:str="close to
     file_name = f'{frame.dir_name}'
     np.save(file_name,list_of_cm)
 
-def check_molecule(frame:frame.frame, type:str, filter:str)->None:
+def check_molecule(frame:frame.frame, filter:str)->None:
     """Function to check the molecular data"""
 
     if (filter == "close to border"):
@@ -55,12 +55,23 @@ def check_molecule(frame:frame.frame, type:str, filter:str)->None:
 
         print("invalid function!")
         return
-
+    
+    count = 0
+    string_to_save = ''
     for molecule in frame.molecules:
+        
+        if (func(molecule)):
 
-        if (frame.is_cut_by_boundary(molecule)):
+            string_to_save += molecule.print_data()
+            count+=1
 
-            print(molecule.raw_data)
+    print(count)
+    print(string_to_save)
+    
+    with open("tmp.txt", mode = 'w') as f:
+
+        f.write(string_to_save)
+
 
 def main():
 
@@ -87,7 +98,8 @@ def main():
                 cut_off_distance=1.2,
                 Use_full_CM=False)
         
-        pool.apply_async(save_cm, args=(Frame, numerator_matrix, "cut by boundary"))
+        #pool.apply_async(save_cm, args=(Frame, numerator_matrix, "cut by boundary"))
+        pool.apply_async(check_molecule, args=(Frame, "cut by boundary"))
 
     pool.close()
     pool.join()
