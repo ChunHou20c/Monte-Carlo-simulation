@@ -28,6 +28,52 @@ class molecule:
 
         return return_string
 
+    def process_data(self, border: float, process_x: bool, process_y: bool, process_z: bool)->None:
+        """This method process the molecules that is cut by the boundary and reconstruct the whole raw data of the molecule,
+        this function is expected to be used together with the cut by boundary method in the frame object
+        
+        arguments: 
+        border - the border value of the box
+        process_x - whether x value is cut by boundary
+        process_y - whether y value is cut by boundary
+        process_z - whether z value is cut by boundary
+        """
+        
+        tmp_raw_data = ''
+        for line in self.raw_data:
+            
+
+            datas = line.split()
+                
+            if (process_x):
+                #process x by adding the boundary value to the lower value of the x coordinates
+                
+                if (datas[-3]<5):
+                    
+                    modified_value = float(datas[-3])+border
+                    datas[-3] = f'{modified_value:.3f}'
+
+            if (process_y):
+                #process y by adding the boundary value to the lower value of the x coordinates
+
+                if (datas[-2]<5):
+                    
+                    modified_value = float(datas[-2])+border
+                    datas[-2] = f'{modified_value:.3f}'
+
+            if (process_z):
+                #process z by adding the boundary value to the lower value of the x coordinates
+
+                if (datas[-1]<5):
+                    
+                    modified_value = float(datas[-1])+border
+                    datas[-1] = f'{modified_value:.3f}'
+        
+            new_line = ' '.join(datas)
+            tmp_raw_data += new_line
+    
+        self.raw_data = tmp_raw_data
+
     def get_name(self):
         """getter function to return the name of the molecule with index for example 1DBT, 2DBT"""
 
