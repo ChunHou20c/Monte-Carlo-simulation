@@ -16,6 +16,12 @@ class molecule:
         self.name = molecular_data[0].split()[0]
         self.atoms = [atom(line) for line in self.raw_data]
 
+    def __str__(self) -> str:
+        """print the name of the molecule"""
+
+        return self.name
+
+
     def print_data(self):
         """Function to check the functionality of the molecular class"""
         
