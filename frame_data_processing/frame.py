@@ -138,6 +138,13 @@ class frame():
             return True
 
         return False
+
+    def valid_pair(self):
+        """This function check the valid pair for the comparison"""
+
+        pass
+        molecules_to_compare = [m for m in self.molecules if func(m) == False] 
+ 
     
 @lru_cache(maxsize=1)    
 def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:

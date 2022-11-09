@@ -10,4 +10,9 @@ class simulation:
         
         self.Frame = frame
 
+    def check_frame_data(self):
+        """method to check the frame data"""
 
+
+        for molecule in self.Frame.molecules:
+            print(molecule)

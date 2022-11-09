@@ -18,8 +18,9 @@ class molecule:
 
     def __str__(self) -> str:
         """print the name of the molecule"""
-
-        return self.name
+        
+        _str = f"{self.name}"
+        return _str
 
 
     def print_data(self):
