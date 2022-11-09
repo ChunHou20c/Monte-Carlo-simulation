@@ -139,12 +139,26 @@ class frame():
 
         return False
 
-    def valid_pair(self):
-        """This function check the valid pair for the comparison"""
+    def valid_pair(self, option:str = 'inner')->list[molecule.molecule]:
+        """This function check the valid pair for the comparison
+        this function should return the pairs of molecule that satisfied the conditions
+        molecules that are not close to boundary should be treated differently from the molecules that are close to boundary
 
-        pass
-        molecules_to_compare = [m for m in self.molecules if func(m) == False] 
- 
+        option: inner or outer"""
+        
+        if (option == 'inner'):
+
+            molecular_list = [m for m in self.molecules if self.is_cut_by_boundary(m) == False]
+
+        elif (option == 'outer'):
+
+            molecular_list = [m for m in self.molecules if self.is_cut_by_boundary(m) == True]
+        
+        else:
+            
+            molecular_list = self.molecules
+
+        return molecular_list
     
 @lru_cache(maxsize=1)    
 def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:
