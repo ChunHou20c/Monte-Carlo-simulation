@@ -41,12 +41,18 @@ class frame():
             self.z_boundary = float(box_data[2])
 
             molecular_data_to_process = molecular_data[:-1]
+            
+            #list of molecules are list of string that is extracted from the text file
             list_of_molecule = self.molecule_split(molecular_data_to_process)
             self.molecules=[molecule.molecule(m) for m in list_of_molecule]
 
-    def molecule_split(self, raw_data)->list[list[str]]:
+    def molecule_split(self, raw_data: list[str])->list[list[str]]:
         """This function splits the aggregated molecular raw data into single molecule
-        as for now the number of atoms in a molecule is known and fixed"""
+        as for now the number of atoms in a molecule is known and fixed
+
+        raw_data: list of string
+
+        return: list of list of string"""
 
         def split(list_to_split:list[str],chunk_size:int)->Generator:
             """generator to split the data"""
@@ -55,6 +61,19 @@ class frame():
                 yield list_to_split[i:i+chunk_size]
 
         return list(split(raw_data,self.molecule_size))
+
+    def molecule_pair_is_close(self, m1: molecule.molecule, m2: molecule.molecule)->bool:
+        """This function tell whether the two molecule is close enough to be considered as pair
+            
+            return: bool"""
+        
+        molecular_distance = molecule.distance(m1, m2)
+
+        if (molecular_distance<= self.distance_cut_off):
+
+            return True
+
+        return False
 
     def gen_cm_list(self, numerator_matrix:np.ndarray, func:Callable)->list[np.ndarray]:
         """This function generate the list of matrix template for the coulomb matrix generation
@@ -67,9 +86,7 @@ class frame():
         CM_list = []
         for molecule1, molecule2 in itertools.combinations(molecules_to_compare,2):
             
-
-            molecular_distance = molecule.distance(molecule1,molecule2)
-            if (molecular_distance<= self.distance_cut_off):
+            if (self.molecule_pair_is_close(molecule1, molecule2)):
 
                 x1 = [i.x for i in molecule1.atoms]
                 x2 = [i.x for i in molecule2.atoms]
@@ -139,7 +156,7 @@ class frame():
 
         return False
 
-    def valid_pair(self, option:str = 'inner')->list[molecule.molecule]:
+    def valid_molecules(self, option:str = 'inner')->list[molecule.molecule]:
         """This function check the valid pair for the comparison
         this function should return the pairs of molecule that satisfied the conditions
         molecules that are not close to boundary should be treated differently from the molecules that are close to boundary
@@ -159,6 +176,34 @@ class frame():
             molecular_list = self.molecules
 
         return molecular_list
+
+    def valid_pairs(self)-> tuple[list[molecule.molecule], list[molecule.molecule], list[molecule.molecule]]:
+        """This method separate the pairs into inner-inner valid pairs, inner-outer pairs and outer-outer pairs
+
+        option: inner or outer"""
+
+        inner_molecules = self.valid_molecules('inner')
+        outer_molecules = self.valid_molecules('outer')
+
+        
+        inner_inner_pair = []
+        inner_outer_pair = []
+        outer_outer_pair = []
+        for molecule1, molecule2 in itertools.combinations(inner_molecules,2):
+            
+            molecular_distance = molecule.distance(molecule1,molecule2)
+            if (molecular_distance<= self.distance_cut_off):
+
+                inner_inner_pair.append([molecule1, molecule2])
+
+        for molecule1, molecule2 in itertools.combinations(inner_molecules,):
+            
+            molecular_distance = molecule.distance(molecule1,molecule2)
+
+            if (molecular_distance<= self.distance_cut_off):
+
+                inner_inner_pair.append([molecule1, molecule2])
+    
     
 @lru_cache(maxsize=1)    
 def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:
@@ -179,3 +224,6 @@ def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:
         np.fill_diagonal(charge_matrix,diagonal_elements)
 
     return charge_matrix
+
+
+
