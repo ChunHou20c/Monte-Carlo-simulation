@@ -36,8 +36,9 @@ class frame():
         for m1, m2 in itertools.combinations(molecules, 2):
             
             if (self.molecule_pair_is_close(m1, m2)):
-
-                self.molecules.add_edge(m1, m2)
+                
+                dis = molecule.distance(m1, m2)
+                self.molecules.add_edge(m1, m2, dis)
 
     def import_data(self, path:str):
         """helper function to import the data from file.

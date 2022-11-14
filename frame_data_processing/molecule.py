@@ -1,3 +1,4 @@
+from functools import lru_cache
 from frame_data_processing.atom import atom
 from frame_data_processing import atom as Atom
 
@@ -94,7 +95,7 @@ class molecule:
 
         return x_list, y_list, z_list
     
-
+@lru_cache(maxsize=1)
 def distance(m1:molecule,m2:molecule)->float:
     """This method calculates the distance between the two molecule"""
     

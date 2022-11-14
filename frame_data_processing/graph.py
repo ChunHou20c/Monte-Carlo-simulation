@@ -15,9 +15,9 @@ class Vertex:
     
     def __str__(self):
 
-        return f"molecule : {self.id} \n adjacents : {self.adjacent.keys()}"
+        return f"molecule : {self.id} adjacents : {self.adjacent}"
 
-    def add_neighbor(self, neighbor, weight = 0) -> None:
+    def add_neighbor(self, neighbor:str, weight:float = 0) -> None:
         """Weight is the coulomb matrix/ distance/ charge transfer coupling or transfer rate between the 2 vertex
         will decide later"""
 
@@ -75,17 +75,17 @@ class Graph:
 
             return None
 
-    def add_edge(self, frm:molecule.molecule, to:molecule.molecule, weight = 0):
+    def add_edge(self, frm:molecule.molecule, to:molecule.molecule, weight:float = 0):
         """method to add edge (connection) to two vertex"""
 
-        if frm not in self.vert_dict:
+        if frm.get_name() not in self.vert_dict.keys():
             self.add_vertex(frm)
 
-        if to not in self.vert_dict:
+        if to.get_name() not in self.vert_dict.keys():
             self.add_vertex(to)
 
-        self.vert_dict[frm.get_name()].add_neighbor(self.vert_dict[to.get_name()], weight)
-        self.vert_dict[to.get_name()].add_neighbor(self.vert_dict[frm.get_name()], weight)
+        self.vert_dict[frm.get_name()].add_neighbor(self.vert_dict[to.get_name()].get_id(), weight)
+        self.vert_dict[to.get_name()].add_neighbor(self.vert_dict[frm.get_name()].get_id(), weight)
 
     def get_vertices(self):
         """getter method to get all the keys in the graph"""
