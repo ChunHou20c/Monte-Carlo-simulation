@@ -79,15 +79,13 @@ class Graph:
         """method to add edge (connection) to two vertex"""
 
         if frm not in self.vert_dict:
-
             self.add_vertex(frm)
 
         if to not in self.vert_dict:
-
             self.add_vertex(to)
 
-        self.vert_dict[frm].add_neighbor(self.vert_dict[to], weight)
-        self.vert_dict[to].add_neighbor(self.vert_dict[frm], weight)
+        self.vert_dict[frm.get_name()].add_neighbor(self.vert_dict[to.get_name()], weight)
+        self.vert_dict[to.get_name()].add_neighbor(self.vert_dict[frm.get_name()], weight)
 
     def get_vertices(self):
         """getter method to get all the keys in the graph"""

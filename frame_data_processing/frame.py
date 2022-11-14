@@ -16,21 +16,28 @@ class frame():
             cut_off_distance:float = 1.2,
             Use_full_CM:bool = True) -> None:
         """The constructor to read all the data from the text file, take path of the file as argument"""
-
+        
+        self.working_dir = working_dir
         self.molecule_size = molecule_size
         self.cut_off_distance = cut_off_distance
         self.Use_full_CM = Use_full_CM
         self.CM_save_path = ''
-        self.atoms = 0
+        self.no_of_atoms = 0
         self.x_boundary = 0
         self.y_boundary = 0
         self.z_boundary = 0
         self.molecules = graph.Graph()
 
-    def build_graph(self, molecules: list[molecule.molecule]):
+        self.import_data(path)
+
+    def build_graph(self, molecules: list[molecule.molecule]) ->None:
         """helper method to build the graph"""
-        
-        pass
+
+        for m1, m2 in itertools.combinations(molecules, 2):
+            
+            if (self.molecule_pair_is_close(m1, m2)):
+
+                self.molecules.add_edge(m1, m2)
 
     def import_data(self, path:str):
         """helper function to import the data from file.
@@ -43,7 +50,7 @@ class frame():
 
             first_line = next(frame_data)
             step_number = first_line.split()[-1]
-            self.CM_save_path = f'{working_dir}/results/{step_number}.npy' #this last element is the step we want  
+            self.CM_save_path = f'{self.working_dir}/results/{step_number}.npy' #this last element is the step we want  
             #The step number will be used to  construct the folder name for the molecules and pairs
             
             self.atoms = next(frame_data) #this is the number of line to be read as molecular data also the number of atoms in the frame
@@ -87,7 +94,7 @@ class frame():
         
         molecular_distance = molecule.distance(m1, m2)
 
-        if (molecular_distance<= self.cut_off_distance
+        if (molecular_distance<= self.cut_off_distance):
 
             return True
 
@@ -129,8 +136,8 @@ class frame():
     def print_attributes(self):
         """This method can be used to check the attributes of the data"""
         
-        print(f'directory to save = {self.dir_name}')
-        print(f'number of lines to save = {self.number_of_line}')
+        print(f'directory to save = {self.CM_save_path}')
+        print(f'number of lines to save = {self.no_of_atoms}')
         print(f'box data = {self.x_boundary}, {self.y_boundary}, {self.z_boundary}')
         print(f'no of atoms in a single molecule = {self.molecule_size}')
 
@@ -174,54 +181,54 @@ class frame():
 
         return False
 
-    def valid_molecules(self, option:str = 'inner')->list[molecule.molecule]:
-        """This function check the valid pair for the comparison
-        this function should return the pairs of molecule that satisfied the conditions
-        molecules that are not close to boundary should be treated differently from the molecules that are close to boundary
-
-        option: inner or outer"""
-        
-        if (option == 'inner'):
-
-            molecular_list = [m for m in self.molecules if self.is_cut_by_boundary(m) == False]
-
-        elif (option == 'outer'):
-
-            molecular_list = [m for m in self.molecules if self.is_cut_by_boundary(m) == True]
-        
-        else:
-            
-            molecular_list = self.molecules
-
-        return molecular_list
-
-    def valid_pairs(self)-> tuple[list[molecule.molecule], list[molecule.molecule], list[molecule.molecule]]:
-        """This method separate the pairs into inner-inner valid pairs, inner-outer pairs and outer-outer pairs
-
-        option: inner or outer"""
-
-        inner_molecules = self.valid_molecules('inner')
-        outer_molecules = self.valid_molecules('outer')
-
-        
-        inner_inner_pair = []
-        inner_outer_pair = []
-        outer_outer_pair = []
-        for molecule1, molecule2 in itertools.combinations(inner_molecules,2):
-            
-            molecular_distance = molecule.distance(molecule1,molecule2)
-            if (molecular_distance<= self.distance_cut_off):
-
-                inner_inner_pair.append([molecule1, molecule2])
-
-        for molecule1, molecule2 in itertools.combinations(inner_molecules,):
-            
-            molecular_distance = molecule.distance(molecule1,molecule2)
-
-            if (molecular_distance<= self.distance_cut_off):
-
-                inner_inner_pair.append([molecule1, molecule2])
-    
+#    def valid_molecules(self, option:str = 'inner')->list[molecule.molecule]:
+#        """This function check the valid pair for the comparison
+#        this function should return the pairs of molecule that satisfied the conditions
+#        molecules that are not close to boundary should be treated differently from the molecules that are close to boundary
+#
+#        option: inner or outer"""
+#        
+#        if (option == 'inner'):
+#
+#            molecular_list = [m for m in self.molecules if self.is_cut_by_boundary(m) == False]
+#
+#        elif (option == 'outer'):
+#
+#            molecular_list = [m for m in self.molecules if self.is_cut_by_boundary(m) == True]
+#        
+#        else:
+#            
+#            molecular_list = self.molecules
+#
+#        return molecular_list
+#
+#    def valid_pairs(self)-> tuple[list[molecule.molecule], list[molecule.molecule], list[molecule.molecule]]:
+#        """This method separate the pairs into inner-inner valid pairs, inner-outer pairs and outer-outer pairs
+#
+#        option: inner or outer"""
+#
+#        inner_molecules = self.valid_molecules('inner')
+#        outer_molecules = self.valid_molecules('outer')
+#
+#        
+#        inner_inner_pair = []
+#        inner_outer_pair = []
+#        outer_outer_pair = []
+#        for molecule1, molecule2 in itertools.combinations(inner_molecules,2):
+#            
+#            molecular_distance = molecule.distance(molecule1,molecule2)
+#            if (molecular_distance<= self.distance_cut_off):
+#
+#                inner_inner_pair.append([molecule1, molecule2])
+#
+#        for molecule1, molecule2 in itertools.combinations(inner_molecules,):
+#            
+#            molecular_distance = molecule.distance(molecule1,molecule2)
+#
+#            if (molecular_distance<= self.distance_cut_off):
+#
+#                inner_inner_pair.append([molecule1, molecule2])
+#    
     
 @lru_cache(maxsize=1)    
 def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:
@@ -229,7 +236,7 @@ def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:
     there is only one numerator matrix throughout the program
 
     use full matrix only when it is necessary (the file will be big)"""
-    element_list=[i.element for i in frame.molecules[0].atoms]
+    element_list=[i.element for i in frame.molecules['1DBT'].atoms]
 
     if(not use_full_matrix):
         element_matrix = np.tile(element_list,(frame.molecule_size,1))
@@ -242,6 +249,5 @@ def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:
         np.fill_diagonal(charge_matrix,diagonal_elements)
 
     return charge_matrix
-
 
 
