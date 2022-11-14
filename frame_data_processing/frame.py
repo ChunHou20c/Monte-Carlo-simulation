@@ -31,9 +31,17 @@ class frame():
         self.import_data(path)
 
     def build_graph(self, molecules: list[molecule.molecule]) ->None:
-        """helper method to build the graph"""
+        """helper method to build the graph
+        the molecules that are cut by the boundary should be excluded first"""
+            
+        #here the molecules are separated into 2 sets, 1 is the normal molecule and another is the molecules that is cut by border
+        #these molecules will be treated separately by eventually will be added into the same graph, with different variation of a vertex
 
-        for m1, m2 in itertools.combinations(molecules, 2):
+        m_cut_by_border = [m for m in molecules if self.is_cut_by_boundary(m)==True]
+        m_not_cut_by_border = [m for m in molecules if m not in m_cut_by_border]
+        
+        
+        for m1, m2 in itertools.combinations(m_not_cut_by_border, 2):
             
             if (self.molecule_pair_is_close(m1, m2)):
                 
