@@ -1,11 +1,7 @@
 """This module is used to store the data of a frame using the graph data structure
 this data structure is an undirectional weighted graph"""
 
-from itertools import combinations
-from frame_data_processing import frame
 from frame_data_processing import molecule
-from typing import Callable
-import json
 
 class Vertex:
     """This class represent the node that stores data of a molecule itself"""
