@@ -4,6 +4,7 @@ import numpy as np
 from typing import Callable, Generator
 from frame_data_processing import molecule
 from frame_data_processing import gen_coulomb_matrix
+from frame_data_processing import graph
 from functools import lru_cache
 
 class frame():
@@ -17,9 +18,23 @@ class frame():
         """The constructor to read all the data from the text file, take path of the file as argument"""
 
         self.molecule_size = molecule_size
-        self.distance_cut_off = cut_off_distance
+        self.cut_off_distance = cut_off_distance
         self.Use_full_CM = Use_full_CM
-        print(path)
+        self.CM_save_path = ''
+        self.atoms = 0
+        self.x_boundary = 0
+        self.y_boundary = 0
+        self.z_boundary = 0
+        self.molecules = graph.Graph()
+
+    def build_graph(self, molecules: list[molecule.molecule]):
+        """helper method to build the graph"""
+        
+        pass
+
+    def import_data(self, path:str):
+        """helper function to import the data from file.
+        the molecule graph will be build here and update to the object"""
 
         with open(path) as frame_data:
 
@@ -28,10 +43,10 @@ class frame():
 
             first_line = next(frame_data)
             step_number = first_line.split()[-1]
-            self.dir_name = f'{working_dir}/results/{step_number}.npy' #this last element is the step we want  
+            self.CM_save_path = f'{working_dir}/results/{step_number}.npy' #this last element is the step we want  
             #The step number will be used to  construct the folder name for the molecules and pairs
             
-            self.number_of_line = next(frame_data) #this is the number of line to be read as molecular data
+            self.atoms = next(frame_data) #this is the number of line to be read as molecular data also the number of atoms in the frame
 
             molecular_data = frame_data.readlines()
             box_data = molecular_data[-1].split()
@@ -39,12 +54,15 @@ class frame():
             self.x_boundary = float(box_data[0])
             self.y_boundary = float(box_data[1])
             self.z_boundary = float(box_data[2])
-
             molecular_data_to_process = molecular_data[:-1]
             
             #list of molecules are list of string that is extracted from the text file
             list_of_molecule = self.molecule_split(molecular_data_to_process)
-            self.molecules=[molecule.molecule(m) for m in list_of_molecule]
+            molecules=[molecule.molecule(m) for m in list_of_molecule]
+
+            self.build_graph(molecules)
+
+                #put everything first without worrying about border will handle later
 
     def molecule_split(self, raw_data: list[str])->list[list[str]]:
         """This function splits the aggregated molecular raw data into single molecule
@@ -69,7 +87,7 @@ class frame():
         
         molecular_distance = molecule.distance(m1, m2)
 
-        if (molecular_distance<= self.distance_cut_off):
+        if (molecular_distance<= self.cut_off_distance
 
             return True
 
