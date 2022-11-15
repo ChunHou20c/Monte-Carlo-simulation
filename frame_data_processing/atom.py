@@ -5,6 +5,7 @@ class atom:
     def __init__(self,line:str):
         """Constructor of the atom class, define the atomic mass and xyz position of the atom from the line"""
 
+        self.string_data = line
         data = line.split()
         #this line extract the element from the string, currently it is fine to take the first character only as this will be faster
         #and there is no element with 2 character currently
@@ -24,6 +25,28 @@ class atom:
 
         print(f'atom = {self.element}')
         print(f'xyz coordinate = {self.x},{self.y},{self.z}')
+
+    def check_string(self)->None:
+
+        print(self.string_data)
+
+    def modify_coordinate(self, changes:float, axis:str)->None:
+        """This method modify the coordinate of the atom"""
+
+        if(axis == 'x'):
+
+            self.x += changes
+            self.string_data = self.string_data[:23] + f'{self.x:.3f}' + self.string_data[28:]
+
+        elif(axis == 'y'):
+
+            self.y += changes
+            self.string_data = self.string_data[:31] + f'{self.y:.3f}' + self.string_data[36:]
+
+        elif(axis == 'z'):
+
+            self.z += changes
+            self.string_data = self.string_data[:39] + f'{self.z:.3f}' + self.string_data[-1]
 
 def distance(a1:atom,a2:atom)->float:
     """atomic distance base on xyz coordinate of atom 1 and atom 2
