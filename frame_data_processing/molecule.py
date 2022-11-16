@@ -16,6 +16,7 @@ class molecule:
         self.raw_data = molecular_data
         self.name = molecular_data[0].split()[0]
         self.atoms = [atom(line) for line in self.raw_data]
+        self.molecule_length = 5 #this is the molecular length in nm, just to use to check the molecule that is cut by boundary
 
     def __str__(self) -> str:
         """print the name of the molecule"""
@@ -35,6 +36,32 @@ class molecule:
             return_string+=line
 
         return return_string
+
+    def is_cut_by_boundary(self)->bool:
+        """This method check if the molecule is cut in half by the boundary condition
+        
+        this method works by first getting the list of xyz coordinate from the molecule,
+        which is obtained from get_xyz_list method in the molecule class
+
+        if the range of the data is large (max - min more than limit then the molecule must be cut in border)"""
+
+        limit = self.molecule_length
+
+        x, y, z = self.get_xyz_list()
+
+        if (max(x) - min(x) > limit):
+
+            return True
+        
+        if (max(y) - min(y) > limit):
+
+            return True
+
+        if (max(z) - min(z) > limit):
+
+            return True
+
+        return False
 
     def process_data(self, border: float, process_x: bool, process_y: bool, process_z: bool)->None:
         """This method process the molecules that is cut by the boundary and reconstruct the whole raw data of the molecule,
