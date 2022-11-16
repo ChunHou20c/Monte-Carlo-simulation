@@ -17,6 +17,10 @@ class molecule:
         self.name = molecular_data[0].split()[0]
         self.atoms = [atom(line) for line in self.raw_data]
         self.molecule_length = 5 #this is the molecular length in nm, just to use to check the molecule that is cut by boundary
+        self.is_cut = False
+        self.cut_condition = [False, False, False] #this list store whether the molecule is cut in the 3 axis
+
+        self.check_boudary()
 
     def __str__(self) -> str:
         """print the name of the molecule"""
@@ -42,7 +46,7 @@ class molecule:
 
         self.molecule_length = length
 
-    def is_cut_by_boundary(self)->bool:
+    def check_boudary(self)->None:
         """This method check if the molecule is cut in half by the boundary condition
         
         this method works by first getting the list of xyz coordinate from the molecule,
@@ -55,69 +59,97 @@ class molecule:
         x, y, z = self.get_xyz_list()
 
         if (max(x) - min(x) > limit):
-
-            return True
+            
+            self.is_cut = True
+            self.cut_condition[0] = True
         
         if (max(y) - min(y) > limit):
 
-            return True
+            self.is_cut = True
+            self.cut_condition[1] = True
 
         if (max(z) - min(z) > limit):
 
-            return True
+            self.is_cut = True
+            self.cut_condition[2] = True
 
-        return False
+    def check_condition(self)->None:
+        """this method display the cut condition of this molecule"""
 
-    def process_data(self, border: float, process_x: bool, process_y: bool, process_z: bool)->None:
-        """This method process the molecules that is cut by the boundary and reconstruct the whole raw data of the molecule,
-        this function is expected to be used together with the cut by boundary method in the frame object
+        string_to_print = f"is cut : {self.is_cut} \nx-axis : {self.cut_condition[0]}\ny-axis : {self.cut_condition[1]}\nz-axis : {self.cut_condition[2]}"
+
+        print(string_to_print)
+
+
+
+    def atom_separator(self)-> None:
+        """this function should check for all the atoms that is not in the current box"""
         
-        arguments: 
-        border - the border value of the box
-        process_x - whether x value is cut by boundary
-        process_y - whether y value is cut by boundary
-        process_z - whether z value is cut by boundary
-        """
-        
-        tmp_raw_data = ''
-        for line in self.raw_data:
-            
+        pass
 
-            datas = line.split()
-                
-            if (process_x):
-                #process x by adding the boundary value to the lower value of the x coordinates
-                
-                if (datas[-3]<5):
-                    
-                    modified_value = float(datas[-3])+border
-                    datas[-3] = f'{modified_value:.3f}'
+    def make_complete(self)->None:
+        """this method make the molecule into complete molecule in the same box"""
 
-            if (process_y):
-                #process y by adding the boundary value to the lower value of the x coordinates
+        #currently doesn't allow for multiple direction completion, the completion is restricted to positive direction only
 
-                if (datas[-2]<5):
-                    
-                    modified_value = float(datas[-2])+border
-                    datas[-2] = f'{modified_value:.3f}'
+        pass
 
-            if (process_z):
-                #process z by adding the boundary value to the lower value of the x coordinates
+    def export_molecule(self)->list[str]:
+        """this method will export the molecular data in string"""
 
-                if (datas[-1]<5):
-                    
-                    modified_value = float(datas[-1])+border
-                    datas[-1] = f'{modified_value:.3f}'
-        
-            new_line = ' '.join(datas)
-            tmp_raw_data += new_line
-    
-        self.raw_data = tmp_raw_data
+        return self.raw_data
 
-    def get_name(self):
-        """getter function to return the name of the molecule with index for example 1DBT, 2DBT"""
 
-        return self.name
+#    def process_data(self, border: float, process_x: bool, process_y: bool, process_z: bool)->None:
+#        """This method process the molecules that is cut by the boundary and reconstruct the whole raw data of the molecule,
+#        this function is expected to be used together with the cut by boundary method in the frame object
+#        
+#        arguments: 
+#        border - the border value of the box
+#        process_x - whether x value is cut by boundary
+#        process_y - whether y value is cut by boundary
+#        process_z - whether z value is cut by boundary
+#        """
+#        
+#        tmp_raw_data = ''
+#        for line in self.raw_data:
+#            
+#
+#            datas = line.split()
+#                
+#            if (process_x):
+#                #process x by adding the boundary value to the lower value of the x coordinates
+#                
+#                if (datas[-3]<5):
+#                    
+#                    modified_value = float(datas[-3])+border
+#                    datas[-3] = f'{modified_value:.3f}'
+#
+#            if (process_y):
+#                #process y by adding the boundary value to the lower value of the x coordinates
+#
+#                if (datas[-2]<5):
+#                    
+#                    modified_value = float(datas[-2])+border
+#                    datas[-2] = f'{modified_value:.3f}'
+#
+#            if (process_z):
+#                #process z by adding the boundary value to the lower value of the x coordinates
+#
+#                if (datas[-1]<5):
+#                    
+#                    modified_value = float(datas[-1])+border
+#                    datas[-1] = f'{modified_value:.3f}'
+#        
+#            new_line = ' '.join(datas)
+#            tmp_raw_data += new_line
+#    
+#        self.raw_data = tmp_raw_data
+#
+#    def get_name(self):
+#        """getter function to return the name of the molecule with index for example 1DBT, 2DBT"""
+#
+#        return self.name
 
     def get_xyz_list(self)-> tuple[list[float], list[float], list[float]]:
 
