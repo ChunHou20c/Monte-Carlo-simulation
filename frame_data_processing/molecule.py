@@ -37,6 +37,11 @@ class molecule:
 
         return return_string
 
+    def set_molecule_length(self, length:float)-> None:
+        """setter method for the molecule length"""
+
+        self.molecule_length = length
+
     def is_cut_by_boundary(self)->bool:
         """This method check if the molecule is cut in half by the boundary condition
         
