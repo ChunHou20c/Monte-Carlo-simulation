@@ -1,6 +1,7 @@
 """This script is use for class object testing, atom, molecule"""
 
 from frame_data_processing import atom
+from frame_data_processing import molecule
 
 def atom_test():
 
@@ -19,6 +20,16 @@ def atom_test():
         atom1.print_data()
         atom1.check_string()
 
+def molecule_test():
+    
+    with open("test_files/molecule1.txt", 'r') as f:
+        
+        m_string = f.readlines()
+
+        molecule1 = molecule.molecule(m_string)
+
+        print(molecule1)
+
 if __name__ == '__main__':
 
-    atom_test()
+    molecule_test()
