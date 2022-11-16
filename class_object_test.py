@@ -22,13 +22,27 @@ def atom_test():
 
 def molecule_test():
     
-    with open("test_files/molecule1.txt", 'r') as f:
+    with open("test_files/3DBT_cut_in_half.txt", 'r') as f:
         
         m_string = f.readlines()
 
         molecule1 = molecule.molecule(m_string)
 
         print(molecule1)
+        
+        molecule1.check_condition()
+
+        molecule1.atom_processing()
+
+        content_to_write = molecule1.raw_data
+
+    with open("test_files/3DBT_processed", 'w') as f:
+
+        for line in content_to_write:
+
+            f.write(line)
+
+        
 
 if __name__ == '__main__':
 

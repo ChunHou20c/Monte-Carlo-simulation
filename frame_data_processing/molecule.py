@@ -80,13 +80,32 @@ class molecule:
 
         print(string_to_print)
 
-
-
-    def atom_separator(self)-> None:
-        """this function should check for all the atoms that is not in the current box"""
+    def atom_processing(self)-> None:
+        """this function should check for all the atoms that is not in the current box and make them complete"""
         
-        pass
+        if (self.cut_condition[0]):
+            for atom in self.atoms:
 
+                if atom.x < 5:
+
+                    atom.modify_coordinate(10.000, 'x')
+
+        if (self.cut_condition[1]):
+            for atom in self.atoms:
+
+                if atom.y < 5:
+
+                    atom.modify_coordinate(10.000, 'y')
+
+        if (self.cut_condition[2]):
+            for atom in self.atoms:
+
+                if atom.z < 5:
+
+                    atom.modify_coordinate(10.000, 'z')
+
+        self.raw_data = [i.string_data for i in self.atoms]
+        
     def make_complete(self)->None:
         """this method make the molecule into complete molecule in the same box"""
 
