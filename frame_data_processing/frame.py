@@ -78,8 +78,6 @@ class frame():
 
             self.build_graph(molecules)
 
-                #put everything first without worrying about border will handle later
-
     def molecule_split(self, raw_data: list[str])->list[list[str]]:
         """This function splits the aggregated molecular raw data into single molecule
         as for now the number of atoms in a molecule is known and fixed
@@ -114,6 +112,7 @@ class frame():
         func is a function for filtering molecule
         use self.is_close_to_border of self.is_cut_by_boundary"""
         
+        #this method will be changed later to handle the border case molecules
 
         molecules_to_compare = [m for m in self.molecules if func(m) == False] 
 
@@ -258,5 +257,4 @@ def gen_numerator_matrix(frame:frame, use_full_matrix = True)->np.ndarray:
         np.fill_diagonal(charge_matrix,diagonal_elements)
 
     return charge_matrix
-
 

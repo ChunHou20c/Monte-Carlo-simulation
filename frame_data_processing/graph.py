@@ -5,6 +5,8 @@ from frame_data_processing import molecule
 
 class Vertex:
     """This class represent the node that stores data of a molecule itself"""
+    
+    hint = 'vertex'
 
     def __init__(self, node:molecule.molecule) -> None:
         """the node is a molecule, the molecule name will be used as the key to access the vertex
@@ -38,6 +40,18 @@ class Vertex:
         currently doesn't handle key doesn't exist error"""
 
         return self.adjacent[neighbor]
+
+class border(Vertex):
+    """Same as vertex but with hint border and separated dictionary for neighbors from different side
+        this class will not check whether the molecule is actually at border, so check have to be done before constructing"""
+    
+    hint = 'border'
+
+    def __init__(self, node: molecule.molecule, flags:tuple[bool, bool, bool]) -> None:
+        """flag is the x y z cut by border flag, will check for neighbor base on the flag"""
+        super().__init__(node)
+
+
 
 class Graph:
     """The data structure of the undirectional weighted graph"""

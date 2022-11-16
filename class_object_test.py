@@ -42,8 +42,6 @@ def molecule_test():
 
             f.write(line)
 
-        
-
 if __name__ == '__main__':
 
     molecule_test()
