@@ -36,17 +36,20 @@ class atom:
         if(axis == 'x'):
 
             self.x += changes
-            self.string_data = self.string_data[:23] + f'{self.x:.3f}' + self.string_data[28:]
 
         elif(axis == 'y'):
 
             self.y += changes
-            self.string_data = self.string_data[:31] + f'{self.y:.3f}' + self.string_data[36:]
 
         elif(axis == 'z'):
 
             self.z += changes
-            self.string_data = self.string_data[:39] + f'{self.z:.3f}' + self.string_data[-1]
+        
+        x_str = '{0:.3f}'.format(self.x)
+        y_str = '{0:.3f}'.format(self.y)
+        z_str = '{0:.3f}'.format(self.z)
+
+        self.string_data = "{:>20} {:>7} {:>7} {:>7}\n".format(self.string_data[:20], x_str, y_str, z_str)
 
 def distance(a1:atom,a2:atom)->float:
     """atomic distance base on xyz coordinate of atom 1 and atom 2
