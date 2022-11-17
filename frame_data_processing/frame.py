@@ -17,6 +17,9 @@ class frame():
             Use_full_CM:bool = True) -> None:
         """The constructor to read all the data from the text file, take path of the file as argument"""
         
+        self.first_line = ''
+        self.second_line = ''
+        self.last_line = ''
         self.working_dir = working_dir
         self.molecule_size = molecule_size
         self.cut_off_distance = cut_off_distance
@@ -37,9 +40,25 @@ class frame():
         #here the molecules are separated into 2 sets, 1 is the normal molecule and another is the molecules that is cut by border
         #these molecules will be treated separately by eventually will be added into the same graph, with different variation of a vertex
 
-        m_cut_by_border = [m for m in molecules if self.is_cut_by_boundary(m)==True]
+        m_cut_by_border = [m for m in molecules if self.is_cut_by_boundary(m)]
+    
+        #with open('test_files/broken_molecule.txt','w') as f:
+        #    for m in m_cut_by_border:
+
+        #        print(m.get_name())
+        #        
+        #        f.write(m.get_name())
+        #        f.write('\n')
+
         m_not_cut_by_border = [m for m in molecules if m not in m_cut_by_border]
         
+        for m in m_cut_by_border:
+
+            m.check_condition()
+
+            m.atom_processing()
+
+            self.molecules.add_vertex(m)
         
         for m1, m2 in itertools.combinations(m_not_cut_by_border, 2):
             
@@ -57,14 +76,15 @@ class frame():
         #do some processing first to cleanup unused line
         #first line is the frame number
 
-            first_line = next(frame_data)
-            step_number = first_line.split()[-1]
+            self.first_line = next(frame_data)
+            step_number = self.first_line.split()[-1]
             self.CM_save_path = f'{self.working_dir}/results/{step_number}.npy' #this last element is the step we want  
             #The step number will be used to  construct the folder name for the molecules and pairs
             
-            self.atoms = next(frame_data) #this is the number of line to be read as molecular data also the number of atoms in the frame
+            self.second_line = next(frame_data) #this is the number of line to be read as molecular data also the number of atoms in the frame
 
             molecular_data = frame_data.readlines()
+            self.last_line = molecular_data[-1]
             box_data = molecular_data[-1].split()
             
             self.x_boundary = float(box_data[0])
@@ -188,6 +208,22 @@ class frame():
             return True
 
         return False
+
+    def export_molecule(self, key:str, file:str)->None:
+        """this method export the gro file with the selected molecule"""
+
+        molecule = self.molecules.get_vertex(key).molecule
+
+        with open(file, 'w') as f:
+            
+            f.write(self.first_line)
+            f.write('{:>5}\n'.format(56))
+            
+            for line in molecule.export_molecule():
+
+                f.write(line)
+
+            f.write(' 0.00000   0.00000   0.00000\n')
 
 #    def valid_molecules(self, option:str = 'inner')->list[molecule.molecule]:
 #        """This function check the valid pair for the comparison
