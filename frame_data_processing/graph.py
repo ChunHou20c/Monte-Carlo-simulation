@@ -14,6 +14,7 @@ class Vertex:
 
         self.id = node.get_name()
         self.adjacent = {}
+        self.molecule = node
     
     def __str__(self):
 
@@ -51,6 +52,8 @@ class border(Vertex):
         """flag is the x y z cut by border flag, will check for neighbor base on the flag"""
         super().__init__(node)
 
+        pass
+
 
 
 class Graph:
@@ -78,7 +81,7 @@ class Graph:
 
         return new_vertex #might not return this
 
-    def get_vertex(self, key):
+    def get_vertex(self, key)->Vertex:
         """getter method to get the vertex base on the key"""
         
         if key in self.vert_dict:
