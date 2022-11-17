@@ -88,21 +88,21 @@ class molecule:
 
                 if atom.x < 5:
 
-                    atom.modify_coordinate(10.000, 'x')
+                    atom.modify_coordinate(9.66986, 'x')
 
         if (self.cut_condition[1]):
             for atom in self.atoms:
 
                 if atom.y < 5:
 
-                    atom.modify_coordinate(10.000, 'y')
+                    atom.modify_coordinate(9.66986, 'y')
 
         if (self.cut_condition[2]):
             for atom in self.atoms:
 
                 if atom.z < 5:
 
-                    atom.modify_coordinate(10.000, 'z')
+                    atom.modify_coordinate(9.66986, 'z')
 
         self.raw_data = [i.string_data for i in self.atoms]
         
@@ -165,10 +165,10 @@ class molecule:
 #    
 #        self.raw_data = tmp_raw_data
 #
-#    def get_name(self):
-#        """getter function to return the name of the molecule with index for example 1DBT, 2DBT"""
-#
-#        return self.name
+    def get_name(self):
+        """getter function to return the name of the molecule with index for example 1DBT, 2DBT"""
+
+        return self.name
 
     def get_xyz_list(self)-> tuple[list[float], list[float], list[float]]:
 
