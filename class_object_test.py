@@ -2,6 +2,7 @@
 
 from frame_data_processing import atom
 from frame_data_processing import molecule
+from frame_data_processing import frame
 
 def atom_test():
 
@@ -42,6 +43,22 @@ def molecule_test():
 
             f.write(line)
 
-if __name__ == '__main__':
+def frame_test():
 
-    molecule_test()
+    working_dir = '/home/chunhou/Documents/FYP'
+    molecule_size=56
+
+        
+    frame0 = frame.frame('Frames/DBT1-00', working_dir=working_dir,
+            molecule_size=molecule_size, cut_off_distance= 1.2,
+            Use_full_CM = False)
+    
+    #print(frame0.molecules.get_vertices())
+    frame0.export_molecule('3DBT','test_files/test_molecule.gro')
+
+
+if __name__ == '__main__':
+    
+    #atom_test()
+    #molecule_test()
+    frame_test()
