@@ -1,6 +1,8 @@
 frame_data_processing/__pycache__/*
+simulation/__pycache__/*
 Frames/*
 env_activate.fish
 results/*
 test_files/*
 tmp*
+broken_molecule/*
