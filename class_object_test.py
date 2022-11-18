@@ -54,7 +54,9 @@ def frame_test():
             Use_full_CM = False)
     
     #print(frame0.molecules.get_vertices())
-    frame0.export_molecule('3DBT','test_files/test_molecule.gro')
+    for key in frame0.cut_by_boundary_keys:
+        
+        frame0.export_molecule(key,f'broken_molecule/{key}.gro')
 
 
 if __name__ == '__main__':
