@@ -30,6 +30,7 @@ class frame():
         self.y_boundary = 0
         self.z_boundary = 0
         self.molecules = graph.Graph()
+        self.cut_by_boundary_keys = []
 
         self.import_data(path)
 
@@ -59,6 +60,8 @@ class frame():
             m.atom_processing()
 
             self.molecules.add_vertex(m)
+
+            self.cut_by_boundary_keys.append(m.get_name())
         
         for m1, m2 in itertools.combinations(m_not_cut_by_border, 2):
             
