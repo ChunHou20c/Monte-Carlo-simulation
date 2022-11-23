@@ -26,3 +26,13 @@ class molecule:
     def __str__(self) -> str:
         
         return self.__name__
+
+def atomic_distance(a1:atom, a2:atom)->float:
+    """This function return the distance between 2 atom"""
+
+    x1, y1, z1 = a1.x, a1.y, a1.z
+    x2, y2, z2 = a2.x, a2.y, a2.z
+
+    distance = ((x1-x2)**2 + (y1-y2)**2 + (z1 - z2)**2)**0.5
+
+    return distance
