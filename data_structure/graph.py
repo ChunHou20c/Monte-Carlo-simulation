@@ -77,10 +77,10 @@ class Graph:
     def add_edge(self, frm:Any, to:Any, weight:Any):
         """method to add edge (connection) to two vertex, overide this when use to modify the behaviour"""
 
-        if frm.get_name() not in self.vert_dict.keys():
+        if frm not in self.vert_dict.keys():
             self.add_vertex(frm)
 
-        if to.get_name() not in self.vert_dict.keys():
+        if to not in self.vert_dict.keys():
             self.add_vertex(to)
 
         self.vert_dict[frm].add_neighbor(to, weight)
