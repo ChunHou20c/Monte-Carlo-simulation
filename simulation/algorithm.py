@@ -4,10 +4,9 @@ from simulation import DBT1
 from simulation.molecule_relation import Relation
 from itertools import product
 
-def molecule_is_cut(m:DBT1.DBT1)->tuple[bool, bool, bool]:
+def molecule_is_cut(m:DBT1.DBT1, limit)->tuple[bool, bool, bool]:
     """this function detects if the molecule is cut by boundary, use for this project only"""
 
-    limit = 5 #5 nm
     x = [a.x for a in m.atoms]
     y = [a.y for a in m.atoms]
     z = [a.z for a in m.atoms]
@@ -28,12 +27,10 @@ def molecule_is_cut(m:DBT1.DBT1)->tuple[bool, bool, bool]:
 
     return x_is_cut, y_is_cut, z_is_cut
 
-def complete_molecule(m:DBT1.DBT1)->DBT1.DBT1:
+def complete_molecule(m:DBT1.DBT1, boundary)->DBT1.DBT1:
     """This function make the molecule complete by fixing the x, y, z coordinate of the atoms that is cut by border"""
     
-    boundary = 9.66968
-
-    is_cut = molecule_is_cut(m)
+    is_cut = molecule_is_cut(m, 0.5 * boundary)
     if any(is_cut):
 
         if is_cut[0]:
@@ -60,7 +57,7 @@ def complete_molecule(m:DBT1.DBT1)->DBT1.DBT1:
 
                     m.atoms[index].z += boundary
 
-        return DBT1.DBT1(m.atoms)
+        return DBT1.DBT1(m.atoms, m.__name__)
 
     return m
 
@@ -97,12 +94,13 @@ def _translation_checker(x1:tuple[float, float, float], y1:tuple[float, float, f
         for i in product(tup2, tup1):
             
             vect = i[0] - i[1]
+
             if -0.5*stride <= vect <= 0.5*stride: #if any of the vector fall into this region the check can be stopped immediately, return no transformation
             
                 return 0
-
+            
             avg_dist += vect/9
-        
+
         if avg_dist > 0:
 
             return -1
@@ -126,22 +124,30 @@ def molecular_pair_relation(frm:DBT1.DBT1, to:DBT1.DBT1, cut_off:float, Stride:f
     if there is no relation then it should return None"""
 
     translation = periodic_translation(frm, to, Stride)
-    #translation = (0, 0, 0)
     if DBT1_pair_is_close(frm, to, cut_off, Stride, translation):
 
         return Relation(frm, to, translation)
     
     return None
 
-    #this part will check the transformation
-    #tup = (-1, 0, 1)
-    #ls = [i for i in product(tup, tup, tup) if i not in [(0, 0, 0)]]
 
-    #for i in ls:
+def molecular_pair_relation_brute_force_check(frm:DBT1.DBT1, to:DBT1.DBT1, cut_off:float, Stride:float)->Union[Relation, None]:
+    """This function should tell the relationship between 2 molecules,
+    if there is no relation then it should return None"""
 
-    #    if DBT1_pair_is_close(frm, to, cut_off, Stride, i):
+    translation = periodic_translation(frm, to, Stride)
 
-    #        print(f"pair found at translation {i}")
-    #        return Relation(frm, to, i)
+    if DBT1_pair_is_close(frm, to, cut_off, Stride, (0, 0, 0)):
 
+        return Relation(frm, to, (0, 0, 0))
+    
     #return None
+    
+    tup = (-1, 0, 1)
+    for i in product(tup, tup, tup):
+
+        if DBT1_pair_is_close(frm, to, cut_off, Stride, i):
+
+            return Relation(frm, to, i)
+    
+    return None
