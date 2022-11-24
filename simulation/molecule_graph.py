@@ -1,7 +1,5 @@
 """This is the graph that will be used to track relationship between molecules in the simulation"""
 from data_structure.graph import Graph, Vertex
-from data_structure.cube import Cube
-from typing import Any
 from simulation import DBT1, algorithm, molecule_relation
 
 class Molecule_vertex(Vertex):
