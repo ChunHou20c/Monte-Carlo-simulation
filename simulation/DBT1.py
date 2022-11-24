@@ -1,6 +1,6 @@
 """this module define DBT1 molecule that will be used in the project"""
 
-from data_structure.molecule import molecule, atom, atomic_distance
+from data_structure.molecule import molecule, atom
 
 class Hydrogen(atom):
     """hydrogen atom, charge = 1"""
@@ -49,10 +49,10 @@ class DBT1(molecule):
     S2 = 5
     N = 20
 
-    def __init__(self, atoms: list[atom]) -> None:
+    def __init__(self, atoms: list[atom], name:str = 'DBT1') -> None:
         
         super().__init__(atoms)
-        self.__name__ = 'DBT1'
+        self.__name__ = name
 
     def __verify__(self) -> None:
         """verify if the molecule constructed is DBT1"""
