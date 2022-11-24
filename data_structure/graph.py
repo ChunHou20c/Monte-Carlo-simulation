@@ -61,8 +61,6 @@ class Graph:
         new_vertex = Vertex(node)
         self.vert_dict[new_vertex.get_id()] = new_vertex
 
-        return new_vertex
-
     def get_vertex(self, key)-> Optional[Vertex]:
         """getter method to get the vertex base on the key"""
         
