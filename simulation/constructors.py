@@ -46,7 +46,7 @@ def _Gro_file_parser(filepath:str, chunk_size:int)->dict:
         num_of_atoms = next(f) 
         
         other_data = f.readlines()
-        atomic_data, boundary_data = other_data[:-1], other_data[-1]
+        atomic_data, boundary_data = other_data[:-1], float(other_data[-1].split()[0])
         
         #parse the line and make it into list of atoms
         parsed_atomic_data = [_gro_atom_line_parser(i) for i in atomic_data]
@@ -54,8 +54,8 @@ def _Gro_file_parser(filepath:str, chunk_size:int)->dict:
 
         list_of_groupped_atoms = [i for i in split(list_of_atoms, chunk_size)]
         
-        list_of_molecules = [DBT1.DBT1(i) for i in list_of_groupped_atoms]
-
+        list_of_molecules = [DBT1.DBT1(atoms, f'{index}DBT') for index,atoms in enumerate(list_of_groupped_atoms)]
+        
         return {'title': title, 
                 'num_of_atoms': num_of_atoms,
                 'boundary': boundary_data,
