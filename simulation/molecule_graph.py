@@ -32,6 +32,14 @@ class Molecule_graph(Graph):
     def __init__(self):
         super().__init__()
 
+    def add_vertex(self, node:DBT1.DBT1):
+        """method to add a new vertex to the graph"""
+
+        self.num_vertex +=1
+        
+        new_vertex = Molecule_vertex(node)
+        self.vert_dict[new_vertex.get_id()] = new_vertex
+
     def add_edge(self, frm:DBT1.DBT1, to:DBT1.DBT1, relation:molecule_relation.Relation):
         """
         This method add the relation vertex to the graph, as this graph use DBT1 molecule as input,
@@ -47,13 +55,11 @@ class Molecule_graph(Graph):
         """
 
         if frm.__name__ not in self.vert_dict.keys():
-            self.add_vertex(frm.__name__)
+            self.add_vertex(frm)
 
         if to.__name__ not in self.vert_dict.keys():
-            self.add_vertex(to.__name__)
+            self.add_vertex(to)
 
         self.vert_dict[frm.__name__].add_neighbor(to.__name__, relation)
         self.vert_dict[to.__name__].add_neighbor(frm.__name__, relation.conjugate())
 
-def build_graph():
-    """This is the algorithm that is used to build the molecular graph"""
