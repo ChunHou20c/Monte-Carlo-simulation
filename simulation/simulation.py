@@ -4,6 +4,8 @@ this simulation object take a gro file and a config file as input
 The config file should contain the parameters that will be used in the simulation,
 including the stopping condition, model to use and cut off distance for molecular pair
 """
+import pickle
+import os
 
 from simulation import constructors, algorithm
 from simulation import DBT1
@@ -22,7 +24,7 @@ class Simulation:
         """gro_file - the file path of the gromac file"""
         
         self.__file__ = gro_file
-        self.graph, self.box_width = build_graph(gro_file, 56)
+        self.graph, self.box_width = extract_graph_and_boundary(gro_file)
         self.total_jump = 10000
         self.initial_box = np.array([0,0,0])
         self.current_box = np.array([0,0,0])
@@ -56,7 +58,7 @@ class Simulation:
 
             return key, np.array(relation.translation)
         
-        for i in range(self.total_jump):
+        for _ in range(self.total_jump):
 
             new_key, translation = jump(current_vertex)
             
@@ -81,28 +83,35 @@ class Simulation:
 
 
 
-def build_graph(file_path:str, chunk_size:int)->Graph:
+def extract_graph_and_boundary(file_path:str)->tuple[Graph,float]:
     """This method build the graph for the simulation, (for internal use only, not to be called in runtime)"""
+    
+    file_name = file_path.split('/')[-1]
+    cache_path = f'./cache/{file_name}'
+    if os.path.isfile(cache_path):
 
-    file_data = constructors._Gro_file_parser(file_path, chunk_size)
-    molecules = file_data['list_of_molecules']
-    boundary_data = file_data['boundary']
-    graph = Graph()
-    print(type(graph))
+        with open(cache_path, 'rb') as f:
 
+            graph, boundary_data = pickle.load(f)
+    else:
+        graph = Graph()
+        file_data = constructors._Gro_file_parser(file_path, graph.molecule_length)
+        molecules = file_data['list_of_molecules']
+        boundary_data = file_data['boundary']
 
-    for index,molecule in enumerate(molecules):
-        molecules[index] = algorithm.complete_molecule(molecule, boundary_data)
+        for index,molecule in enumerate(molecules):
+            molecules[index] = algorithm.complete_molecule(molecule, boundary_data)
 
-    for m1, m2 in combinations(molecules, 2):
+        for m1, m2 in combinations(molecules, 2):
 
-        relation = algorithm.molecular_pair_relation(m1, m2, 1.2, boundary_data)
-        if (relation is not None):
+            relation = algorithm.molecular_pair_relation(m1, m2, 1.2, boundary_data)
+            if (relation is not None):
 
-            graph.add_edge(m1,m2,relation)
+                graph.add_edge(m1,m2,relation)
+        
+        with open(cache_path, 'wb') as f:
+            
+            object_to_save = (graph, boundary_data)
+            pickle.dump(object_to_save, f)
 
     return graph, boundary_data
-
-
-
-
