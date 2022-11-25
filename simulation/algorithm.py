@@ -1,7 +1,7 @@
 """This module contains the algorithm that is used by this project only"""
 from typing import Optional, Union
 from simulation import DBT1
-from simulation.molecule_relation import Relation
+from simulation.molecule_relation import create_relation, Relation
 from itertools import product
 
 def molecule_is_cut(m:DBT1.DBT1, limit)->tuple[bool, bool, bool]:
@@ -126,7 +126,7 @@ def molecular_pair_relation(frm:DBT1.DBT1, to:DBT1.DBT1, cut_off:float, Stride:f
     translation = periodic_translation(frm, to, Stride)
     if DBT1_pair_is_close(frm, to, cut_off, Stride, translation):
 
-        return Relation(frm, to, translation)
+        return create_relation(frm, to, translation)
     
     return None
 
