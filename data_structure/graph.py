@@ -33,7 +33,7 @@ class Vertex:
 
         return self.id
 
-    def get_weight(self, neighbor:str) -> float:
+    def get_weight(self, neighbor:str) -> Any:
         """getter method to get the weight connect to the selected neighbor
         currently doesn't handle key doesn't exist error"""
 
