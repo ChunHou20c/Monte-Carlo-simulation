@@ -29,6 +29,8 @@ class Molecule_vertex(Vertex):
 class Molecule_graph(Graph):
     """This class stores the molecules as node and the relation as weight"""
 
+    molecule_length = DBT1.DBT1.length
+    
     def __init__(self):
         super().__init__()
 
