@@ -45,6 +45,32 @@ class Oxygen(atom):
         super().__init__(x, y, z, 8)
         self.__name__ = 'Oxygen'
 
+def charge(charge1:str,charge2:str)->float:
+    """function to convert char to charge value"""
+    
+    charge = {'H':1,'C':6,'N':7,'O':8,'S':16}
+    return charge[charge1]*charge[charge2]
+
+charge_vect = np.vectorize(charge,otypes=[float],cache=True)
+"""vectorized charge function"""
+
+def DBT1_numerator_matrix(filepath:str)->np.ndarray:
+    """
+    this method is used to get product of charge 1 and charge 2, as all the molecules are the same,
+    there is only one numerator matrix throughout the program
+    """
+    
+    with open(filepath) as f:
+
+        list_of_elements = f.readlines()
+        list_of_elements = [l.rstrip('\n') for l in list_of_elements]
+
+    #this line will generate the matrix
+    element_matrix = np.tile(list_of_elements,(56, 1))
+    charge_matrix = charge_vect(element_matrix, element_matrix.T)
+
+    return charge_matrix
+
 def numerator_load(molecule_name:str)->Optional[np.ndarray]:
     """This function load or generate the DBT1 molecule numerator matrix"""
 
@@ -57,7 +83,14 @@ def numerator_load(molecule_name:str)->Optional[np.ndarray]:
 
             return data
     
-    print('The numerator matrix does not exist yet, please run the setup file before using this module!')
+    print('numerator cache does not exist, building cache from DBT1-molecule file')
+    data = DBT1_numerator_matrix('./cache/DBT1-molecule')
+    
+    with open(cache_path, 'wb') as f:
+
+        np.save(f, data)
+
+    return data
 
 class DBT1(molecule):
     """DBT1 is the molecule that is used in the simulation, this molecule contains 56 atoms and formed from C, H, N, and S"""
@@ -139,28 +172,4 @@ def DBT1_distance(x1:tuple[float, float, float],
                         distance_S2_S1 + distance_S2_S2 + distance_S2_N)/9
 
     return Cut_off_distance
-
-def charge(charge1:float, charge2:float, is_diagonal:bool)->float:
-    """function to convert char to charge value"""
-    
-    if(not is_diagonal):
-        return charge1*charge2
-    
-    return 0.5*(charge1**2.4)
-
-charge_vect = np.vectorize(charge,otypes=[float],cache=True)
-"""vectorized charge function"""
-
-def DBT1_numerator_matrix(m1:DBT1)->np.ndarray:
-    """this method is used to get product of charge 1 and charge 2, as all the molecules are the same,
-    there is only one numerator matrix throughout the progra
-
-    use full matrix only when it is necessary (the file will be big)"""
-    element_list=[i.charge for i in m1.atoms]
-
-    #this line will generate the full matrix
-    element_matrix = np.tile(element_list,(DBT1.length, 1))
-    charge_matrix = charge_vect(element_matrix, element_matrix.T, False)
-
-    return charge_matrix
 
