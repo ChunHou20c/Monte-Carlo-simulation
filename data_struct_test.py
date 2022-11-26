@@ -1,10 +1,12 @@
 from data_structure.molecule import molecule, atom 
 from data_structure.cube import Cube
-from simulation.DBT1 import DBT1
+from simulation.DBT1 import DBT1, DBT1_numerator_matrix
 from simulation import constructors
 from simulation import algorithm
 from itertools import combinations
 from simulation.molecule_graph import Molecule_graph as Graph
+
+import pickle
 
 def molecular_data_struct_test():
     atom1 = atom(1,1,1,12)
@@ -33,6 +35,9 @@ def algorithm_test():
     file_data = constructors._Gro_file_parser('Frames/test.gro', 56)
     molecules = file_data['list_of_molecules']
     boundary_data = file_data['boundary']
+
+    filehandler = open('test_pickle', 'wb')
+
     graph = Graph()
     #do a completion on all the molecules
     for index,molecule in enumerate(molecules):
@@ -50,5 +55,26 @@ def algorithm_test():
 
     print(f'number of pair found is {count}')
     print(graph.num_vertex)
+    pickle.dump(graph, filehandler)
+    filehandler.close()
 
-algorithm_test()
+def restore_graph_test():
+    
+    filehandler = open('test_pickle', 'br')
+    graph:Graph = pickle.load(filehandler)
+
+    print(graph.num_vertex)
+
+    filehandler.close()
+
+    key1 = next(iter(graph.get_vertices()))
+    
+    molecule1 = graph.get_vertex(key1).molecule
+        
+
+    print(DBT1_numerator_matrix(molecule1))
+    print(molecule1)
+    
+
+#algorithm_test()
+restore_graph_test()
