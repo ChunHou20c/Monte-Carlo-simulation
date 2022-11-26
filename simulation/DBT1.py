@@ -1,6 +1,10 @@
 """this module define DBT1 molecule that will be used in the project"""
 
 from data_structure.molecule import molecule, atom
+from electron_coupling import coulomb_matrix
+import numpy as np
+import os
+from typing import Optional
 
 class Hydrogen(atom):
     """hydrogen atom, charge = 1"""
@@ -41,6 +45,20 @@ class Oxygen(atom):
         super().__init__(x, y, z, 8)
         self.__name__ = 'Oxygen'
 
+def numerator_load(molecule_name:str)->Optional[np.ndarray]:
+    """This function load or generate the DBT1 molecule numerator matrix"""
+
+    cache_path = f'./cache/{molecule_name}.npy'
+    if os.path.isfile(cache_path):
+        
+        with open(cache_path, 'rb') as f:
+            
+            data = np.load(f)
+
+            return data
+    
+    print('The numerator matrix does not exist yet, please run the setup file before using this module!')
+
 class DBT1(molecule):
     """DBT1 is the molecule that is used in the simulation, this molecule contains 56 atoms and formed from C, H, N, and S"""
 
@@ -48,6 +66,7 @@ class DBT1(molecule):
     S1 = 42
     S2 = 5
     N = 20
+    numerator_matrix = numerator_load('DBT1')
 
     def __init__(self, atoms: list[atom], name:str = 'DBT1') -> None:
         
@@ -120,3 +139,28 @@ def DBT1_distance(x1:tuple[float, float, float],
                         distance_S2_S1 + distance_S2_S2 + distance_S2_N)/9
 
     return Cut_off_distance
+
+def charge(charge1:float, charge2:float, is_diagonal:bool)->float:
+    """function to convert char to charge value"""
+    
+    if(not is_diagonal):
+        return charge1*charge2
+    
+    return 0.5*(charge1**2.4)
+
+charge_vect = np.vectorize(charge,otypes=[float],cache=True)
+"""vectorized charge function"""
+
+def DBT1_numerator_matrix(m1:DBT1)->np.ndarray:
+    """this method is used to get product of charge 1 and charge 2, as all the molecules are the same,
+    there is only one numerator matrix throughout the progra
+
+    use full matrix only when it is necessary (the file will be big)"""
+    element_list=[i.charge for i in m1.atoms]
+
+    #this line will generate the full matrix
+    element_matrix = np.tile(element_list,(DBT1.length, 1))
+    charge_matrix = charge_vect(element_matrix, element_matrix.T, False)
+
+    return charge_matrix
+
