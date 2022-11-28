@@ -1,7 +1,6 @@
 """this module define DBT1 molecule that will be used in the project"""
 
 from data_structure.molecule import molecule, atom
-from electron_coupling import coulomb_matrix
 import numpy as np
 import os
 from typing import Optional
@@ -60,7 +59,7 @@ def DBT1_numerator_matrix(filepath:str)->np.ndarray:
     there is only one numerator matrix throughout the program
     """
     
-    with open(filepath) as f:
+    with open(filepath, 'r') as f:
 
         list_of_elements = f.readlines()
         list_of_elements = [l.rstrip('\n') for l in list_of_elements]
