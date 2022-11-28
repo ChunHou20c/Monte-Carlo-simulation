@@ -10,3 +10,6 @@ broken_molecule/*
 ANN_model/*
 electron_coupling/__pycache__/*
 model/*
+cm_from_graph.npy
+DBT1-00
+DBT1.npy
