@@ -6,6 +6,7 @@ from frame_data_processing import molecule
 from frame_data_processing import gen_coulomb_matrix
 from frame_data_processing import graph
 from functools import lru_cache
+from frame_data_processing import translation_tracker
 
 class frame():
     """The frame class contains the frame number, all the molecules number and also the sides of the box of the frame"""
@@ -43,14 +44,6 @@ class frame():
 
         m_cut_by_border = [m for m in molecules if self.is_cut_by_boundary(m)]
     
-        #with open('test_files/broken_molecule.txt','w') as f:
-        #    for m in m_cut_by_border:
-
-        #        print(m.get_name())
-        #        
-        #        f.write(m.get_name())
-        #        f.write('\n')
-
         m_not_cut_by_border = [m for m in molecules if m not in m_cut_by_border]
         
         for m in m_cut_by_border:
@@ -68,7 +61,18 @@ class frame():
             if (self.molecule_pair_is_close(m1, m2)):
                 
                 dis = molecule.distance(m1, m2)
-                self.molecules.add_edge(m1, m2, dis)
+
+                rel_translation = translation_tracker.translation()
+                rel = graph.relation(dis,rel_translation)
+
+                self.molecules.add_edge(m1, m2, rel)
+
+            else:
+                
+                pass
+                #this part will translate the molecule to other close box and check the distance again
+
+
 
     def import_data(self, path:str):
         """helper function to import the data from file.

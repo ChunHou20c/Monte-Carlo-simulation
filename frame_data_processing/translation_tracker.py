@@ -21,11 +21,16 @@ class position:
 class translation:
     """this class track the xyz translation of periodic space"""
 
-    def __init__(self) -> None:
+    def __init__(self, x: int = 0, y: int = 0, z:int = 0) -> None:
         
-        self.x = 0
-        self.y = 0
-        self.z = 0
+        self.x = x
+        self.y = y
+        self.z = z
+
+def conjugate(translation:translation) -> translation:
+    """this method generate the conjugate of the translation object"""
+
+    return translation(-translation.x, -translation.y, -translation.z)
 
 class region_divider:
     """this class define the current quadrant base on the cutting requirement"""
