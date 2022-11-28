@@ -3,6 +3,7 @@ from typing import Optional, Union
 from simulation import DBT1
 from simulation.molecule_relation import create_relation, Relation
 from itertools import product
+from functools import lru_cache
 
 def molecule_is_cut(m:DBT1.DBT1, limit)->tuple[bool, bool, bool]:
     """this function detects if the molecule is cut by boundary, use for this project only"""
@@ -61,14 +62,19 @@ def complete_molecule(m:DBT1.DBT1, boundary)->DBT1.DBT1:
 
     return m
 
+@lru_cache(maxsize=1)
+def distance(m1:DBT1.DBT1, m2:DBT1.DBT1, Stride, Translation:tuple[int, int, int])->float:
+
+    Coord1, Coord2 = m1.N_S1_S2_coordinates(Stride), m2.N_S1_S2_coordinates(stride = Stride, translation = Translation)
+
+    return DBT1.DBT1_distance(*Coord1, *Coord2)
+
 def DBT1_pair_is_close(m1:DBT1.DBT1, m2: DBT1.DBT1, cut_off:float, Stride, Translation:tuple[int, int, int] = (0, 0, 0))->bool:
     """This function tell whether the two molecule is close enough to be considered as pair
         
         return: bool"""
     
-    Coord1, Coord2 = m1.N_S1_S2_coordinates(Stride), m2.N_S1_S2_coordinates(stride = Stride, translation = Translation)
-
-    molecular_distance = DBT1.DBT1_distance(*Coord1, *Coord2)
+    molecular_distance = distance(m1, m2, Stride, Translation)
 
     if (molecular_distance<= cut_off):
 
@@ -113,7 +119,7 @@ def _translation_checker(x1:tuple[float, float, float], y1:tuple[float, float, f
 
     return x_transformation, y_transformation, z_transformation
 
-def periodic_translation(m1:DBT1.DBT1, m2:DBT1.DBT1, Stride):
+def periodic_translation(m1:DBT1.DBT1, m2:DBT1.DBT1, Stride)->tuple[int, int, int]:
     """This function is a helper/wrapper function to pass arguments into the transformation function"""
 
     Coord1, Coord2 = m1.N_S1_S2_coordinates(Stride), m2.N_S1_S2_coordinates(Stride)
@@ -125,11 +131,11 @@ def molecular_pair_relation(frm:DBT1.DBT1, to:DBT1.DBT1, cut_off:float, Stride:f
 
     translation = periodic_translation(frm, to, Stride)
     if DBT1_pair_is_close(frm, to, cut_off, Stride, translation):
-
-        return create_relation(frm, to, translation)
+        
+        Distance = distance(frm, to, Stride, translation)
+        return create_relation(frm, to, Distance, Stride, translation)
     
     return None
-
 
 def molecular_pair_relation_brute_force_check(frm:DBT1.DBT1, to:DBT1.DBT1, cut_off:float, Stride:float)->Union[Relation, None]:
     """This function should tell the relationship between 2 molecules,
@@ -139,7 +145,8 @@ def molecular_pair_relation_brute_force_check(frm:DBT1.DBT1, to:DBT1.DBT1, cut_o
 
     if DBT1_pair_is_close(frm, to, cut_off, Stride, (0, 0, 0)):
 
-        return Relation(frm, to, (0, 0, 0))
+        Distance = distance(frm, to, Stride, translation)
+        return create_relation(frm, to, Distance, Stride,(0, 0, 0))
     
     #return None
     
@@ -148,6 +155,7 @@ def molecular_pair_relation_brute_force_check(frm:DBT1.DBT1, to:DBT1.DBT1, cut_o
 
         if DBT1_pair_is_close(frm, to, cut_off, Stride, i):
 
-            return Relation(frm, to, i)
+            Distance = distance(frm, to, Stride, i)
+            return create_relation(frm, to, Stride,Distance, i)
     
     return None
