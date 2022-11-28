@@ -7,3 +7,6 @@ results/*
 test_files/*
 tmp*
 broken_molecule/*
+ANN_model/*
+electron_coupling/__pycache__/*
+model/*
