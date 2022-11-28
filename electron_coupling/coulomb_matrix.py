@@ -50,7 +50,7 @@ class CoulombMatrix:
     def gen_CM(self):
         """This function generate the numpy array with the calculated coulomb matrix"""
         
-        distance_matrix = distance_vect(self.x, self.xT, self.y, self.yT, self.z, self.z)
+        distance_matrix = distance_vect(self.x, self.xT, self.y, self.yT, self.z, self.zT)
         #distance matrix is also the denominator matrix
         
         return self.numerator_matrix/distance_matrix
