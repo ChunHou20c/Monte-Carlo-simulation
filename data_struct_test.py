@@ -70,10 +70,9 @@ def restore_graph_test():
     key1 = next(iter(graph.get_vertices()))
     
     molecule1 = graph.get_vertex(key1).molecule
-        
-
-    print(DBT1_numerator_matrix(molecule1))
+    
     print(molecule1)
+    print(DBT1.numerator_matrix)
     
 
 #algorithm_test()
