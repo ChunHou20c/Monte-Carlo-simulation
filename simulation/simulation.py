@@ -4,8 +4,10 @@ this simulation object take a gro file and a config file as input
 The config file should contain the parameters that will be used in the simulation,
 including the stopping condition, model to use and cut off distance for molecular pair
 """
+from math import log
 import pickle
 import os
+from electron_coupling import marcus_equation
 
 from simulation import constructors, algorithm
 from simulation import DBT1
@@ -28,6 +30,7 @@ class Simulation:
         self.total_jump = 10000
         self.initial_box = np.array([0,0,0])
         self.current_box = np.array([0,0,0])
+        self.time = 0
 
         print(self.box_width)
 
@@ -38,41 +41,26 @@ class Simulation:
 
         initial_key = random.choice([ i for i in self.graph.get_vertices()])
         
-        initial_vertex = self.graph.get_vertex(initial_key)
-        print(initial_vertex.id)
+        print('simulation starting from molecule {}'.format(self.graph.get_vertex(initial_key).id))
 
-        current_vertex = initial_vertex
-        
-        def jump(vertex:Molecule_vertex):
-            """This function perform a jump and return the next vertex"""
+        current_key = initial_key
 
-            #choose a neigbour
-            neigbours = vertex.get_connections()
-            key = random.choice([i for i in neigbours])
-
-            relation:Relation = vertex.get_weight(key)
-
-            #this part is reserved for the calculation of the jumping time
-
-            #for now we only care about the box tracking
-
-            return key, np.array(relation.translation)
-        
         for _ in range(self.total_jump):
-
-            new_key, translation = jump(current_vertex)
+                
+            new_key, jumping_time = jump(self.graph, current_key)
             
-            current_vertex = self.graph.get_vertex(new_key)
+            self.time += jumping_time
+
+            translation = self.graph.get_vertex(current_key).get_weight(new_key).translation
 
             self.current_box += translation
 
-        print(f'final box = {self.current_box}')
+            current_key = new_key
 
-        print(type(initial_vertex))
-        print(type(current_vertex))
+        print(f'final box = {self.current_box}')
         
-        initial_molecule = initial_vertex.molecule
-        final_molecule = current_vertex.molecule
+        initial_molecule = self.graph.get_vertex(initial_key).molecule
+        final_molecule = self.graph.get_vertex(current_key).molecule
 
         Coord1 = initial_molecule.N_S1_S2_coordinates(self.box_width, tuple(self.initial_box))
         Coord2 = final_molecule.N_S1_S2_coordinates(self.box_width, tuple(self.current_box))
@@ -81,7 +69,43 @@ class Simulation:
 
         print(f'distance travelled = {distance}')
 
+def jump(graph:Graph, key):
+    """This function perform a jump and return the next vertex"""
 
+    #find all possible neighbour
+    _vertex = graph.get_vertex(key)
+    neigbours = _vertex.get_connections()
+    print(neigbours)
+    #calculate total rate
+    rates = []
+    options = []
+    for neighbour_key in neigbours:
+        
+        CM = _vertex.get_weight(neighbour_key).coulomb_matrix
+        electron_coupling = 0.8
+        reorganization_energy = 0.180
+        temperature = 300
+        Eij = 0
+        
+        options.append(neighbour_key)
+        rates.append(marcus_equation.transfer_rate(electron_coupling, reorganization_energy, temperature, Eij))
+
+    new_key, jumping_rate = random_weight_selector(options, rates)
+    
+    jumping_time = -log(random.uniform(1, 0))/jumping_rate
+    #this part is reserved for the calculation of the jumping time
+
+    #for now we only care about the box tracking
+    print(new_key)
+
+    return new_key, jumping_time
+
+def random_weight_selector(keys:list[str], _weights:list[float]):
+    """A wrapper to random choice of new key"""
+
+    list_of_tuple = [i for i in zip(keys, _weights)]
+    choice = random.choices(list_of_tuple, weights=tuple(_weights), k = 1)
+    return choice[0]
 
 def extract_graph_and_boundary(file_path:str)->tuple[Graph,float]:
     """This method build the graph for the simulation, (for internal use only, not to be called in runtime)"""
