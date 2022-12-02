@@ -7,7 +7,10 @@ including the stopping condition, model to use and cut off distance for molecula
 from math import log
 import pickle
 import os
+from typing import Callable
 from electron_coupling import marcus_equation
+
+import tensorflow as tf
 
 from simulation import constructors, algorithm
 from simulation import DBT1
@@ -31,8 +34,15 @@ class Simulation:
         self.initial_box = np.array([0,0,0])
         self.current_box = np.array([0,0,0])
         self.time = 0
-
+        self.prediction_model = tf.keras.models.load_model('model/CNN1')
+        
+        self.electron_coupling_list, self.electron_coupling_key = make_cache_prediction(self.graph, self.prediction_model)
         print(self.box_width)
+
+    def predicted_electron_coupling(self, key1, key2):
+
+        index = self.electron_coupling_key[(key1, key2)]
+        return self.electron_coupling_list[index]
 
     def run(self):
         """this method run the simulation for electron jumps in the periodic space"""
@@ -47,7 +57,7 @@ class Simulation:
 
         for _ in range(self.total_jump):
                 
-            new_key, jumping_time = jump(self.graph, current_key)
+            new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling)
             
             self.time += jumping_time
 
@@ -68,8 +78,30 @@ class Simulation:
         distance = DBT1.DBT1_distance(*Coord1, *Coord2)
 
         print(f'distance travelled = {distance}')
+        print(f'time taken = {self.time}')
 
-def jump(graph:Graph, key):
+def make_cache_prediction(graph:Graph, prediction_model):
+    """This function make the cache for the model prediction"""
+    
+    list_of_coulomb_matrix = []
+    keys = {}
+    index = 0 #index use to access the predicted value
+    for vertex in graph.vert_dict.values():
+        
+        for key, relation in vertex.adjacent.items():
+            
+            if (vertex.id, key) not in keys.keys():
+                list_of_coulomb_matrix.append(relation.coulomb_matrix)
+                keys[(vertex.id, key)] = index
+                keys[(key, vertex.id)] = index
+                index += 1
+
+    array_of_coulomb_matrix = np.array(list_of_coulomb_matrix)
+    predictions = prediction_model.predict(array_of_coulomb_matrix)
+    
+    return predictions.flatten(), keys
+
+def jump(graph:Graph, key, func:Callable):
     """This function perform a jump and return the next vertex"""
 
     #find all possible neighbour
@@ -81,8 +113,7 @@ def jump(graph:Graph, key):
     options = []
     for neighbour_key in neigbours:
         
-        CM = _vertex.get_weight(neighbour_key).coulomb_matrix
-        electron_coupling = 0.8
+        electron_coupling = func(_vertex.id, neighbour_key)
         reorganization_energy = 0.180
         temperature = 300
         Eij = 0
