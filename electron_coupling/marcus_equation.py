@@ -22,5 +22,3 @@ def transfer_rate(electron_coupling:float, reorganization_energy:float, temperat
     term4 = exp(inside_exponent)
 
     return term1*term2*term3*term4
-
-print('{:e}'.format(transfer_rate(0.8, 0.18, 293)))
