@@ -159,3 +159,13 @@ def molecular_pair_relation_brute_force_check(frm:DBT1.DBT1, to:DBT1.DBT1, cut_o
             return create_relation(frm, to, Stride,Distance, i)
     
     return None
+
+def closest_value(input_list, input_value):
+ 
+  input_list.sort(reverse=True)
+ 
+  difference = lambda input_list : abs(input_list - input_value)
+ 
+  res = min(input_list, key=difference)
+ 
+  return res
