@@ -29,7 +29,7 @@ class Simulation:
         """gro_file - the file path of the gromac file"""
         
         self.__file__ = gro_file
-        self.graph, self.box_width = extract_graph_and_boundary(gro_file)
+        self.graph, self.box_width, self.timestamp = extract_metadata(gro_file)
         self.total_jump = 10000
         self.initial_box = np.array([0,0,0])
         self.current_box = np.array([0,0,0])
@@ -44,6 +44,21 @@ class Simulation:
         index = self.electron_coupling_key[(key1, key2)]
         return self.electron_coupling_list[index]
 
+    def single_jump(self, key):
+        """
+        this method do a single jump from a selected key
+        """
+
+        current_key = key
+        new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling)
+        translation = self.graph.get_vertex(current_key).get_weight(new_key).translation
+
+        #jumping_time = 1e12 * jumping_time
+
+        print(f'{new_key=}, {jumping_time=}, {translation=}')
+
+        return new_key, jumping_time, translation
+    
     def run(self):
         """this method run the simulation for electron jumps in the periodic space"""
         
@@ -123,7 +138,11 @@ def jump(graph:Graph, key, func:Callable):
 
     new_key, jumping_rate = random_weight_selector(options, rates)
     
-    jumping_time = -log(random.uniform(1, 0))/jumping_rate
+    print('{:e}'.format(jumping_rate))
+    random_number = -log(random.uniform(1,0))
+
+    print(f'{random_number=}')
+    jumping_time = random_number/jumping_rate
     #this part is reserved for the calculation of the jumping time
 
     #for now we only care about the box tracking
@@ -138,7 +157,7 @@ def random_weight_selector(keys:list[str], _weights:list[float]):
     choice = random.choices(list_of_tuple, weights=tuple(_weights), k = 1)
     return choice[0]
 
-def extract_graph_and_boundary(file_path:str)->tuple[Graph,float]:
+def extract_metadata(file_path:str)->tuple[Graph,float, float]:
     """This method build the graph for the simulation, (for internal use only, not to be called in runtime)"""
     
     file_name = file_path.split('/')[-1]
@@ -147,12 +166,13 @@ def extract_graph_and_boundary(file_path:str)->tuple[Graph,float]:
 
         with open(cache_path, 'rb') as f:
 
-            graph, boundary_data = pickle.load(f)
+            graph, boundary_data, timestamp = pickle.load(f)
     else:
         graph = Graph()
         file_data = constructors._Gro_file_parser(file_path, graph.molecule_length)
         molecules = file_data['list_of_molecules']
         boundary_data = file_data['boundary']
+        timestamp = file_data['timestamp']
 
         for index,molecule in enumerate(molecules):
             molecules[index] = algorithm.complete_molecule(molecule, boundary_data)
@@ -166,7 +186,7 @@ def extract_graph_and_boundary(file_path:str)->tuple[Graph,float]:
         
         with open(cache_path, 'wb') as f:
             
-            object_to_save = (graph, boundary_data)
+            object_to_save = (graph, boundary_data, timestamp)
             pickle.dump(object_to_save, f)
 
-    return graph, boundary_data
+    return graph, boundary_data, timestamp
