@@ -53,11 +53,17 @@ class Simulation:
         new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling)
         translation = self.graph.get_vertex(current_key).get_weight(new_key).translation
 
-        #jumping_time = 1e12 * jumping_time
+        initial_molecule = self.graph.get_vertex(current_key).molecule
+        final_molecule = self.graph.get_vertex(new_key).molecule
 
-        print(f'{new_key=}, {jumping_time=}, {translation=}')
+        x0, y0, z0 = initial_molecule.center_coordinate(self.box_width, (0, 0, 0))
+        x1, y1, z1 = final_molecule.center_coordinate(self.box_width, translation)
+        
+        Vector = (x1-x0, y1-y0, z1-z0)
+        
+        #print(f'{new_key=}, {jumping_time=}, {Vector=}')
 
-        return new_key, jumping_time, translation
+        return new_key, jumping_time, Vector
     
     def run(self):
         """this method run the simulation for electron jumps in the periodic space"""
@@ -141,7 +147,7 @@ def jump(graph:Graph, key, func:Callable):
     print('{:e}'.format(jumping_rate))
     random_number = -log(random.uniform(1,0))
 
-    print(f'{random_number=}')
+    #print(f'{random_number=}')
     jumping_time = random_number/jumping_rate
     #this part is reserved for the calculation of the jumping time
 
