@@ -138,6 +138,14 @@ class DBT1(molecule):
              self.atoms[DBT1.S2].z + translation[2] * stride)
 
         return x, y, z
+    
+    def center_coordinate(self, stride:float, translation:tuple[int, int, int]=(0, 0, 0))->tuple[float,...]:
+        
+        x = self.atoms[DBT1.N].x + translation[0] * stride
+        y = self.atoms[DBT1.N].y + translation[0] * stride
+        z = self.atoms[DBT1.N].z + translation[0] * stride
+
+        return x, y, z
 
 def cartesian_distance(x1, x2, y1, y2, z1, z2):
     
