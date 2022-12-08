@@ -43,6 +43,8 @@ def _Gro_file_parser(filepath:str, chunk_size:int)->dict:
     with open(filepath, 'r') as f:
         
         title = next(f)
+        timestamp = float(title.split()[4])
+
         num_of_atoms = next(f) 
         
         other_data = f.readlines()
@@ -57,6 +59,7 @@ def _Gro_file_parser(filepath:str, chunk_size:int)->dict:
         list_of_molecules = [DBT1.DBT1(atoms, f'{index}DBT') for index,atoms in enumerate(list_of_groupped_atoms)]
         
         return {'title': title, 
+                'timestamp': timestamp,
                 'num_of_atoms': num_of_atoms,
                 'boundary': boundary_data,
                 'list_of_molecules': list_of_molecules}
