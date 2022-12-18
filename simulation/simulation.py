@@ -34,7 +34,7 @@ class Simulation:
         self.initial_box = np.array([0,0,0])
         self.current_box = np.array([0,0,0])
         self.time = 0
-        self.prediction_model = tf.keras.models.load_model('model/CNN1')
+        self.prediction_model = tf.keras.models.load_model('model/ANN1')
         
         self.electron_coupling_list, self.electron_coupling_key = make_cache_prediction(self.graph, self.prediction_model)
         print(self.box_width)
@@ -61,7 +61,7 @@ class Simulation:
         
         Vector = (x1-x0, y1-y0, z1-z0)
         
-        #print(f'{new_key=}, {jumping_time=}, {Vector=}')
+        print(f'{new_key=}, {jumping_time=}, {Vector=}')
 
         return new_key, jumping_time, Vector
     
