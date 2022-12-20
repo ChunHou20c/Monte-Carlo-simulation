@@ -14,11 +14,11 @@ import numpy as np
 
 class dynamic_simulation:
 
-    def __init__(self, static_frames:list[simulation.Simulation]) -> None:
+    def __init__(self, static_frames:list[simulation.Simulation], jumps:int=10000) -> None:
         
         self.frames_dict:dict[float, simulation.Simulation] = build_dict(static_frames)
         self.timeframe = 0
-        self.total_jump = 10000
+        self.total_jump = jumps
         self.coordinates = [[],[],[]]
         self.vector = np.array((0.0000,0.0000,0.0000))
 
@@ -44,6 +44,7 @@ class dynamic_simulation:
             next_frame = algorithm.closest_value(list(self.frames_dict.keys()), self.timeframe)
             current_frame = self.frames_dict[next_frame]
             
+            print(f'{next_frame = }')
             current_key, jumping_time, vector = current_frame.single_jump(current_key)
             
             current_x, current_y, current_z = np.array([self.coordinates[0][-1], self.coordinates[1][-1], self.coordinates[2][-1]]) + np.array(vector)
@@ -53,8 +54,9 @@ class dynamic_simulation:
             self.coordinates[2].append(current_z)
             
             self.timeframe += jumping_time*1e12
-            print(f'{self.timeframe = }')
             self.vector += np.array(vector)
+
+        print(f'total travel time = {self.timeframe} picosecond')
 
     def export_trajectory(self):
         """This method export the trajectory data in numpy array to draw the trajectory"""
@@ -76,15 +78,15 @@ def build_dict(static_frames:list[simulation.Simulation])->dict:
 
     return dict_to_return
 
-def build_dynamic_simulation(dir:str):
+def build_dynamic_simulation(dir:str, cache_dir='./cache', no_of_jumps:int=10000):
     """This function build the dynamic simulation object from a directory"""
 
     sim_list = []
     for file in os.listdir(dir):
         full_path = os.path.join(dir, file)
-        sim = simulation.Simulation(full_path)
+        sim = simulation.Simulation(full_path, cache_path = cache_dir, memory_saving = True)
         sim_list.append(sim)
 
-    Dynamic_sim = dynamic_simulation(sim_list)
+    Dynamic_sim = dynamic_simulation(sim_list, jumps = no_of_jumps)
 
     return Dynamic_sim
