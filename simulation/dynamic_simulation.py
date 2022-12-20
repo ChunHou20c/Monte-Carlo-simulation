@@ -7,6 +7,7 @@ through the simulation list
 
 from simulation import simulation
 from simulation import algorithm
+from simulation import coordinate_tracker
 import os
 import random
 import numpy as np
@@ -17,8 +18,8 @@ class dynamic_simulation:
         
         self.frames_dict:dict[float, simulation.Simulation] = build_dict(static_frames)
         self.timeframe = 0
-        self.total_jump = 100
-        self.coordinates = []
+        self.total_jump = 10000
+        self.coordinates = [[],[],[]]
         self.vector = np.array((0.0000,0.0000,0.0000))
 
     def inspect(self):
@@ -32,8 +33,11 @@ class dynamic_simulation:
         keys = list(current_frame.graph.get_vertices())
         current_key = random.choice(keys)
         
-        initial_coordinate = np.array(current_frame.graph.get_vertex(current_key).molecule.center_coordinate(current_frame.box_width, (0,0,0)))
-        self.coordinates.append(initial_coordinate)
+        initial_x, initial_y, initial_z = current_frame.graph.get_vertex(current_key).molecule.center_coordinate(current_frame.box_width, (0,0,0))
+        
+        self.coordinates[0].append(initial_x)
+        self.coordinates[1].append(initial_y)
+        self.coordinates[2].append(initial_z)
 
         for _ in range(self.total_jump):
             
@@ -42,13 +46,26 @@ class dynamic_simulation:
             
             current_key, jumping_time, vector = current_frame.single_jump(current_key)
             
-            new_coordinate = self.coordinates[-1] + np.array(vector)
+            current_x, current_y, current_z = np.array([self.coordinates[0][-1], self.coordinates[1][-1], self.coordinates[2][-1]]) + np.array(vector)
             
-            self.coordinates.append(new_coordinate)
+            self.coordinates[0].append(current_x)
+            self.coordinates[1].append(current_y)
+            self.coordinates[2].append(current_z)
+            
             self.timeframe += jumping_time*1e12
             print(f'{self.timeframe = }')
             self.vector += np.array(vector)
-    
+
+    def export_trajectory(self):
+        """This method export the trajectory data in numpy array to draw the trajectory"""
+
+        return np.array(self.coordinates[0]), np.array(self.coordinates[1]), np.array(self.coordinates[2])
+
+    def Plot_trajectory(self):
+        """This method plot the trajectory and save it into a file"""
+
+        coordinate_tracker.Plot_trajectory(*self.export_trajectory())
+
 def build_dict(static_frames:list[simulation.Simulation])->dict:
     
     dict_to_return = {}
