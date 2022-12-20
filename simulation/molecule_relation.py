@@ -1,7 +1,8 @@
 """this module define the relation between 2 molecules"""
 from __future__ import annotations
 from simulation import DBT1
-from electron_coupling.coulomb_matrix import CoulombMatrix
+from electron_coupling.pair_coulomb_matrix import pair_coulomb_matrix
+from electron_coupling import coulomb_matrix
 import numpy as np
 
 class Relation:
@@ -40,8 +41,13 @@ def gen_cm_matrix(m1:DBT1.DBT1, m2:DBT1.DBT1, Stride:float, translation: tuple[i
     y2 = [a.y + translation[1]*Stride for a in m2.atoms]
     z2 = [a.z + translation[2]*Stride for a in m2.atoms]
 
-    CM_object = CoulombMatrix(x1, x2, y1, y2, z1, z2, DBT1.DBT1.numerator_matrix, DBT1.DBT1.length, False)
-    CM = CM_object.gen_CM()
+    x = x1 + x2
+    y = y1 + y2
+    z = z1 + z2
+
+    numerator_matrix = coulomb_matrix.gen_numerator_matrix(DBT1.DBT1.molecule_metadata)
+
+    CM_object = pair_coulomb_matrix(x, y, z, numerator_matrix)
+    CM = CM_object.gen_full_coulomb_matrix()
 
     return CM
-
