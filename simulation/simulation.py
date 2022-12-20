@@ -22,23 +22,32 @@ import random
 import numpy as np
 from simulation.molecule_relation import Relation
 
+import gc
+
 class Simulation:
     """This class define how the simulation should be run from a single frame"""
 
     prediction_model = tf.keras.models.load_model('model/ANN1', compile=False)
     
-    def __init__(self, gro_file:str) -> None:
-        """gro_file - the file path of the gromac file"""
+    def __init__(self, gro_file:str, cache_path:str= './cache', memory_saving:bool=False) -> None:
+        """
+        gro_file - the file path of the gromac file
+        cache_path - directory to cache the data (the file size is large)
+        memory_saving - set to true if a lot of memory is required
+        """
         
         self.__file__ = gro_file
-        self.graph, self.box_width, self.timestamp = extract_metadata(gro_file)
+        self.graph, self.box_width, self.timestamp = extract_metadata(gro_file, cache_path)
         self.total_jump = 10000
         self.initial_box = np.array([0,0,0])
         self.current_box = np.array([0,0,0])
         self.time = 0
-        
         self.electron_coupling_list, self.electron_coupling_key = make_cache_prediction(self.graph, self.prediction_model)
-        print(self.box_width)
+        
+        if memory_saving:
+
+            self.delete_coulomb_matrix()
+            print('memory saving enabled, coulomb matrix are deleted!')
 
     def predicted_electron_coupling(self, key1, key2):
 
@@ -101,6 +110,17 @@ class Simulation:
 
         print(f'distance travelled = {distance}')
         print(f'time taken = {self.time}')
+    
+    def delete_coulomb_matrix(self)->None:
+        """This method is used to delete coulomb matrix from the graph so that memory can be freed"""
+
+        for vertex in self.graph:
+
+            for relation in vertex.adjacent.values():
+
+                del relation.coulomb_matrix
+        
+        gc.collect
 
 def make_cache_prediction(graph:Graph, prediction_model):
     """This function make the cache for the model prediction"""
@@ -164,11 +184,11 @@ def random_weight_selector(keys:list[str], _weights:list[float]):
     choice = random.choices(list_of_tuple, weights=tuple(_weights), k = 1)
     return choice[0]
 
-def extract_metadata(file_path:str)->tuple[Graph,float, float]:
+def extract_metadata(file_path:str, cache_directory:str='./cache')->tuple[Graph,float, float]:
     """This method build the graph for the simulation, (for internal use only, not to be called in runtime)"""
     
     file_name = file_path.split('/')[-1]
-    cache_path = f'./cache/{file_name}'
+    cache_path = f'{cache_directory}/{file_name}'
     if os.path.isfile(cache_path):
 
         with open(cache_path, 'rb') as f:
@@ -197,3 +217,5 @@ def extract_metadata(file_path:str)->tuple[Graph,float, float]:
             pickle.dump(object_to_save, f)
 
     return graph, boundary_data, timestamp
+
+
