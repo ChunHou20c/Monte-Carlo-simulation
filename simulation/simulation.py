@@ -25,6 +25,8 @@ from simulation.molecule_relation import Relation
 class Simulation:
     """This class define how the simulation should be run from a single frame"""
 
+    prediction_model = tf.keras.models.load_model('model/ANN1', compile=False)
+    
     def __init__(self, gro_file:str) -> None:
         """gro_file - the file path of the gromac file"""
         
@@ -34,7 +36,6 @@ class Simulation:
         self.initial_box = np.array([0,0,0])
         self.current_box = np.array([0,0,0])
         self.time = 0
-        self.prediction_model = tf.keras.models.load_model('model/ANN1')
         
         self.electron_coupling_list, self.electron_coupling_key = make_cache_prediction(self.graph, self.prediction_model)
         print(self.box_width)
