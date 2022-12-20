@@ -13,3 +13,7 @@ model/*
 cm_from_graph.npy
 DBT1-00
 DBT1.npy
+cache/*
+dynamic_frames/*
+*.png
+*.csv
