@@ -70,26 +70,26 @@ def DBT1_numerator_matrix(filepath:str)->np.ndarray:
 
     return charge_matrix
 
-def numerator_load(molecule_name:str)->Optional[np.ndarray]:
-    """This function load or generate the DBT1 molecule numerator matrix"""
-
-    cache_path = f'./cache/{molecule_name}.npy'
-    if os.path.isfile(cache_path):
-        
-        with open(cache_path, 'rb') as f:
-            
-            data = np.load(f)
-
-            return data
-    
-    print('numerator cache does not exist, building cache from DBT1-molecule file')
-    data = DBT1_numerator_matrix('./cache/DBT1-molecule')
-    
-    with open(cache_path, 'wb') as f:
-
-        np.save(f, data)
-
-    return data
+#def numerator_load(molecule_name:str)->Optional[np.ndarray]:
+#    """This function load or generate the DBT1 molecule numerator matrix"""
+#
+#    cache_path = f'./cache/{molecule_name}.npy'
+#    if os.path.isfile(cache_path):
+#        
+#        with open(cache_path, 'rb') as f:
+#            
+#            data = np.load(f)
+#
+#            return data
+#    
+#    print('numerator cache does not exist, building cache from DBT1-molecule file')
+#    data = DBT1_numerator_matrix('./cache/DBT1-molecule')
+#    
+#    with open(cache_path, 'wb') as f:
+#
+#        np.save(f, data)
+#
+#    return data
 
 class DBT1(molecule):
     """DBT1 is the molecule that is used in the simulation, this molecule contains 56 atoms and formed from C, H, N, and S"""
@@ -98,7 +98,7 @@ class DBT1(molecule):
     S1 = 42
     S2 = 5
     N = 20
-    numerator_matrix = numerator_load('DBT1')
+    molecule_metadata = 'cache/DBT1-molecule-pair'
 
     def __init__(self, atoms: list[atom], name:str = 'DBT1') -> None:
         
