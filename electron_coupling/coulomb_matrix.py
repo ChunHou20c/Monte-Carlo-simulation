@@ -3,57 +3,39 @@ import numpy as np
 class CoulombMatrix:
     """This class is used to construct the full coulomb matrix object"""
 
-    def __init__(self, x1:list[float], x2:list[float],
-            y1:list[float], y2:list[float],
-            z1:list[float], z2:list[float],
-            numerator_matrix:np.ndarray,
-            molecular_size:int,
-            Use_full_CM = True) -> None:
+    def __init__(self, x:list[float], y:list[float], z:list[float], numerator_matrix:np.ndarray) -> None:
         """Constructor of the coulomb matrix object, take x, y, and z coordinate matrix to generate the coulomb matrix
         Please make sure the size of the numerator matrix is the same as the requested coulomb matrix size
         the expected x, y, z inputs are a list of x, y, z coordinates"""
 
         self.numerator_matrix = numerator_matrix
+        
+        matrix_length = len(x)
+        #generate matrix of xyz coordinate
+        x_matrix = np.tile(x,(matrix_length,1))
+        y_matrix = np.tile(y,(matrix_length,1))
+        z_matrix = np.tile(z,(matrix_length,1))
 
-        if(Use_full_CM):
-            x_list = x1 + x2 
-            y_list = y1 + y2
-            z_list = z1 + z2
+        self.x_list = x
+        self.y_list = y
+        self.z_list = z
 
-            x = np.tile(x_list,(molecular_size*2,1))
-            y = np.tile(y_list,(molecular_size*2,1))
-            z = np.tile(z_list,(molecular_size*2,1))
+        self.x = x_matrix
+        self.y = y_matrix
+        self.z = z_matrix
 
-            self.x = x
-            self.xT = x.T
-            self.y = y
-            self.yT = y.T
-            self.z = z
-            self.zT = z.T
-
-        else:
-            
-            x1_array = np.tile(x1,(molecular_size,1))
-            x2_array = np.tile(x2,(molecular_size,1))
-            y1_array = np.tile(y1,(molecular_size,1))
-            y2_array = np.tile(y2,(molecular_size,1))
-            z1_array = np.tile(z1,(molecular_size,1))
-            z2_array = np.tile(z2,(molecular_size,1))
-
-            self.x = x1_array
-            self.xT = x2_array.T
-            self.y = y1_array
-            self.yT = y2_array.T
-            self.z = z1_array
-            self.zT = z2_array.T
-
-    def gen_CM(self):
+    def gen_full_coulomb_matrix(self):
         """This function generate the numpy array with the calculated coulomb matrix"""
         
-        distance_matrix = distance_vect(self.x, self.xT, self.y, self.yT, self.z, self.zT)
+        distance_matrix = distance_vect(self.x, self.x.T, self.y, self.y.T, self.z, self.z.T)
         #distance matrix is also the denominator matrix
         
         return self.numerator_matrix/distance_matrix
+
+    def gen_denominator_matrix(self):
+
+        distance_matrix = distance_vect(self.x, self.x.T, self.y, self.y.T, self.z, self.z.T)
+        return distance_matrix
     
 def dist(x1:float,x2:float,y1:float,y2:float,z1:float,z2:float)->float:
     """This method calculate the distance element in the coulomb matrix"""
@@ -65,7 +47,7 @@ def dist(x1:float,x2:float,y1:float,y2:float,z1:float,z2:float)->float:
 
 distance_vect = np.vectorize(dist, otypes=[float], cache = True)
         
-def charge(arr1:str,arr2:str,is_diagonal:bool=False)->int:
+def charge_product(arr1:str,arr2:str,is_diagonal:bool=False)->int:
     """function to convert char to charge value"""
     
     charge = {'H':1,'C':6,'N':7,'O':8,'S':16}
@@ -74,14 +56,26 @@ def charge(arr1:str,arr2:str,is_diagonal:bool=False)->int:
     
     return 0.5*(charge[arr1]**2.4)
 
-charge_vect = np.vectorize(charge,otypes=[float],cache=True)
+charge_vect = np.vectorize(charge_product,otypes=[float],cache=True)
 """vectorized charge function"""
 
-def gen_cm(distance, charge1, charge2)->float:
-    """function to do calculation"""
-    if(distance != -1):
-        return (charge1*charge2)/distance
-    
-    return 0.5*charge1**2.4
+def gen_numerator_matrix(path_to_molecule_data:str)->np.ndarray:
+    """This function generate numerator matrix from molecule data"""
 
-gen_cm_vect = np.vectorize(gen_cm,otypes=[float],cache=True)
+    with open(path_to_molecule_data, 'r') as f:
+
+        content = f.readlines()
+
+        matrix_size = len(content)
+
+        element_list = [i.replace('\n', '') for i in content]
+
+        element_matrix = np.tile(element_list,(matrix_size,1))
+        
+        numerator_matrix = charge_vect(element_matrix, element_matrix.T, False)
+
+        diagonal_element = charge_vect(element_list, element_list, True)
+
+        np.fill_diagonal(numerator_matrix, diagonal_element)
+
+        return numerator_matrix
