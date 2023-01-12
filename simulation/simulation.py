@@ -10,12 +10,15 @@ import os
 from typing import Callable
 from electron_coupling import marcus_equation
 
-import tensorflow as tf
-
 from simulation import constructors, algorithm
 from simulation import DBT1
 from simulation.molecule_graph import Molecule_graph as Graph
 from simulation.molecule_graph import Molecule_vertex
+
+#for model
+from simulation.model import prediction_model
+import tensorflow as tf
+
 from itertools import combinations
 
 import random
@@ -24,10 +27,12 @@ from simulation.molecule_relation import Relation
 
 import gc
 
+
 class Simulation:
     """This class define how the simulation should be run from a single frame"""
 
-    prediction_model = tf.keras.models.load_model('model/ANN1', compile=False)
+    prediction_model = prediction_model('/home/chunhou/Documents/FYP/simulation/model/cnn2d-deployment/')
+    #prediction_model = tf.keras.models.load_model('model/ANN1')
     
     def __init__(self, gro_file:str, cache_path:str= './cache', memory_saving:bool=False) -> None:
         """
@@ -38,7 +43,7 @@ class Simulation:
         
         self.__file__ = gro_file
         self.graph, self.box_width, self.timestamp = extract_metadata(gro_file, cache_path)
-        self.total_jump = 10000
+        self.total_jump = 100000
         self.initial_box = np.array([0,0,0])
         self.current_box = np.array([0,0,0])
         self.time = 0
@@ -81,35 +86,75 @@ class Simulation:
         #start by choosing a random molecule - vertex
 
         initial_key = random.choice([ i for i in self.graph.get_vertices()])
+        initial_box = np.array([0,0,0])
         
         print('simulation starting from molecule {}'.format(self.graph.get_vertex(initial_key).id))
 
         current_key = initial_key
 
-        for _ in range(self.total_jump):
+        current_time = 0
+        current_box = np.array([0,0,0])
+        
+        displacement_list = []
+        time_list = []
+
+        for i in range(self.total_jump):
                 
             new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling)
             
-            self.time += jumping_time
+            current_time += jumping_time
 
             translation = self.graph.get_vertex(current_key).get_weight(new_key).translation
 
-            self.current_box += translation
+            current_box += translation
+            #if np.sum(abs(np.array(translation)))>=1:
+
+            #    print(f'large translation found! {translation}')
 
             current_key = new_key
 
-        print(f'final box = {self.current_box}')
+#            if np.sum(abs(current_box)>=10):
+#                
+#                print(abs(current_box))
+#                print(abs(current_box)>=10)
+#                print(np.sum(abs(current_box)>=10))
+#
+#                break
+#            if current_time >= 2e-10:
+#                
+#                print('simulation time limit reached')
+#                break
+
+            initial_molecule = self.graph.get_vertex(initial_key).molecule
+            current_molecule = self.graph.get_vertex(current_key).molecule
+
+            Coord1 = initial_molecule.center_coordinate(self.box_width, tuple(initial_box))
+            Coord2 = current_molecule.center_coordinate(self.box_width, tuple(current_box))
+
+            distance = DBT1.cartesian_distance(Coord1[0], Coord2[0], Coord1[1], Coord2[1], Coord1[2], Coord2[2])
+
+            displacement_list.append(distance)
+            time_list.append(current_time)
+
+            if current_time >= 1e-9:
+            
+                print(f'simulation time reached! number of jumps = {i}')
+                break
+
+        print(f'final box = {current_box}')
         
         initial_molecule = self.graph.get_vertex(initial_key).molecule
         final_molecule = self.graph.get_vertex(current_key).molecule
 
-        Coord1 = initial_molecule.N_S1_S2_coordinates(self.box_width, tuple(self.initial_box))
-        Coord2 = final_molecule.N_S1_S2_coordinates(self.box_width, tuple(self.current_box))
+        Coord1 = initial_molecule.center_coordinate(self.box_width, tuple(initial_box))
+        Coord2 = final_molecule.center_coordinate(self.box_width, tuple(current_box))
 
-        distance = DBT1.DBT1_distance(*Coord1, *Coord2)
+        distance = DBT1.cartesian_distance(Coord1[0], Coord2[0], Coord1[1], Coord2[1], Coord1[2], Coord2[2])
 
         print(f'distance travelled = {distance}')
-        print(f'time taken = {self.time}')
+        print(f'time taken = {current_time}')
+
+        return displacement_list, time_list
     
     def delete_coulomb_matrix(self)->None:
         """This method is used to delete coulomb matrix from the graph so that memory can be freed"""
@@ -149,10 +194,12 @@ def jump(graph:Graph, key, func:Callable):
     #find all possible neighbour
     _vertex = graph.get_vertex(key)
     neigbours = _vertex.get_connections()
-    print(neigbours)
+    #print(neigbours)
     #calculate total rate
-    rates = []
+    #jump_time = []
     options = []
+    rates = []
+
     for neighbour_key in neigbours:
         
         electron_coupling = func(_vertex.id, neighbour_key)
@@ -161,19 +208,24 @@ def jump(graph:Graph, key, func:Callable):
         Eij = 0
         
         options.append(neighbour_key)
+    
+        #random_number = -log(random.uniform(0,1))
         rates.append(marcus_equation.transfer_rate(electron_coupling, reorganization_energy, temperature, Eij))
 
     new_key, jumping_rate = random_weight_selector(options, rates)
     
-    print('{:e}'.format(jumping_rate))
-    random_number = -log(random.uniform(1,0))
+    #min_time_index = np.argmin(jump_time)
+    #new_key = options[min_time_index]
+    random_jumping_rate = np.random.exponential(jumping_rate)
+    jumping_time = 1/random_jumping_rate
+    #print('{:e}'.format(jumping_rate))
 
     #print(f'{random_number=}')
-    jumping_time = random_number/jumping_rate
+    #jumping_time = random_number/jumping_rate
     #this part is reserved for the calculation of the jumping time
 
     #for now we only care about the box tracking
-    print(new_key)
+    #print(new_key)
 
     return new_key, jumping_time
 
