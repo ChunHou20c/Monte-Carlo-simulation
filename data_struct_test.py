@@ -60,20 +60,12 @@ def algorithm_test():
 
 def restore_graph_test():
     
-    filehandler = open('test_pickle', 'br')
-    graph:Graph = pickle.load(filehandler)
+    filehandler = open('cache/DBT1-00', 'br')
+    graph, _, _ = pickle.load(filehandler)
 
     print(graph.num_vertex)
 
     filehandler.close()
-
-    key1 = next(iter(graph.get_vertices()))
-    
-    molecule1 = graph.get_vertex(key1).molecule
-    
-    print(molecule1)
-    print(DBT1.numerator_matrix)
-    
 
 #algorithm_test()
 restore_graph_test()
