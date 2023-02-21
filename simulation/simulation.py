@@ -7,17 +7,17 @@ including the stopping condition, model to use and cut off distance for molecula
 from math import log
 import pickle
 import os
-from typing import Callable
+from typing import Callable, Type
 from electron_coupling import marcus_equation
 
 from simulation import constructors, algorithm
-from simulation import DBT1
+from simulation import DBT
 from simulation.molecule_graph import Molecule_graph as Graph
 from simulation.molecule_graph import Molecule_vertex
 
 #for model
-from simulation.model import prediction_model
-import tensorflow as tf
+from simulation.model import random_model as prediction_model
+#import tensorflow as tf
 
 from itertools import combinations
 
@@ -31,24 +31,28 @@ import gc
 class Simulation:
     """This class define how the simulation should be run from a single frame"""
 
-    prediction_model = prediction_model('/home/chunhou/Documents/FYP/simulation/model/cnn2d-deployment/')
+    prediction_model = prediction_model('/home/chunhou/Documents/FYP/simulation/model/coupling_dbt2.npy')
+    #prediction_model = prediction_model('/home/chunhou/Documents/FYP/simulation/model/cnn2d-deployment/')
     #prediction_model = tf.keras.models.load_model('model/ANN1')
     
-    def __init__(self, gro_file:str, cache_path:str= './cache', memory_saving:bool=False) -> None:
+    def __init__(self, gro_file:str, molecule:Type[DBT.DBT], cache_path:str= './cache', memory_saving:bool=False) -> None:
         """
         gro_file - the file path of the gromac file
         cache_path - directory to cache the data (the file size is large)
         memory_saving - set to true if a lot of memory is required
         """
+        print('start building')
         
         self.__file__ = gro_file
-        self.graph, self.box_width, self.timestamp = extract_metadata(gro_file, cache_path)
+        self.graph, self.box_width, self.timestamp = extract_metadata(gro_file, molecule, cache_path )
         self.total_jump = 100000
         self.initial_box = np.array([0,0,0])
         self.current_box = np.array([0,0,0])
         self.time = 0
         self.electron_coupling_list, self.electron_coupling_key = make_cache_prediction(self.graph, self.prediction_model)
+        self.molecule = molecule
         
+        print('done')
         if memory_saving:
 
             self.delete_coulomb_matrix()
@@ -59,13 +63,13 @@ class Simulation:
         index = self.electron_coupling_key[(key1, key2)]
         return self.electron_coupling_list[index]
 
-    def single_jump(self, key):
+    def single_jump(self, key, reorganization_energy = 0.180):
         """
         this method do a single jump from a selected key
         """
 
         current_key = key
-        new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling)
+        new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling, reorganization_energy)
         translation = self.graph.get_vertex(current_key).get_weight(new_key).translation
 
         initial_molecule = self.graph.get_vertex(current_key).molecule
@@ -100,7 +104,7 @@ class Simulation:
 
         for i in range(self.total_jump):
                 
-            new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling)
+            new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling, self.molecule.reorganization_energy)
             
             current_time += jumping_time
 
@@ -131,7 +135,7 @@ class Simulation:
             Coord1 = initial_molecule.center_coordinate(self.box_width, tuple(initial_box))
             Coord2 = current_molecule.center_coordinate(self.box_width, tuple(current_box))
 
-            distance = DBT1.cartesian_distance(Coord1[0], Coord2[0], Coord1[1], Coord2[1], Coord1[2], Coord2[2])
+            distance = DBT.cartesian_distance(Coord1[0], Coord2[0], Coord1[1], Coord2[1], Coord1[2], Coord2[2])
 
             displacement_list.append(distance)
             time_list.append(current_time)
@@ -149,7 +153,7 @@ class Simulation:
         Coord1 = initial_molecule.center_coordinate(self.box_width, tuple(initial_box))
         Coord2 = final_molecule.center_coordinate(self.box_width, tuple(current_box))
 
-        distance = DBT1.cartesian_distance(Coord1[0], Coord2[0], Coord1[1], Coord2[1], Coord1[2], Coord2[2])
+        distance = DBT.cartesian_distance(Coord1[0], Coord2[0], Coord1[1], Coord2[1], Coord1[2], Coord2[2])
 
         print(f'distance travelled = {distance}')
         print(f'time taken = {current_time}')
@@ -188,7 +192,7 @@ def make_cache_prediction(graph:Graph, prediction_model):
     
     return predictions.flatten(), keys
 
-def jump(graph:Graph, key, func:Callable):
+def jump(graph:Graph, key, func:Callable, reorganization_energy):
     """This function perform a jump and return the next vertex"""
 
     #find all possible neighbour
@@ -203,7 +207,6 @@ def jump(graph:Graph, key, func:Callable):
     for neighbour_key in neigbours:
         
         electron_coupling = func(_vertex.id, neighbour_key)
-        reorganization_energy = 0.180
         temperature = 300
         Eij = 0
         
@@ -236,7 +239,7 @@ def random_weight_selector(keys:list[str], _weights:list[float]):
     choice = random.choices(list_of_tuple, weights=tuple(_weights), k = 1)
     return choice[0]
 
-def extract_metadata(file_path:str, cache_directory:str='./cache')->tuple[Graph,float, float]:
+def extract_metadata(file_path:str, molecule:Type[DBT.DBT], cache_directory:str='./cache')->tuple[Graph,float, float]:
     """This method build the graph for the simulation, (for internal use only, not to be called in runtime)"""
     
     file_name = file_path.split('/')[-1]
@@ -247,14 +250,14 @@ def extract_metadata(file_path:str, cache_directory:str='./cache')->tuple[Graph,
 
             graph, boundary_data, timestamp = pickle.load(f)
     else:
-        graph = Graph()
-        file_data = constructors._Gro_file_parser(file_path, graph.molecule_length)
+        graph = Graph(molecule)
+        file_data = constructors._Gro_file_parser(file_path, graph.molecule_length, molecule)
         molecules = file_data['list_of_molecules']
         boundary_data = file_data['boundary']
         timestamp = file_data['timestamp']
 
-        for index,molecule in enumerate(molecules):
-            molecules[index] = algorithm.complete_molecule(molecule, boundary_data)
+        for index, _molecule in enumerate(molecules):
+            molecules[index] = algorithm.complete_molecule(_molecule, boundary_data, molecule)
 
         for m1, m2 in combinations(molecules, 2):
 

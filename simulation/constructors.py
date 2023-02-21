@@ -1,18 +1,18 @@
 """This module contains all the constructors for the data structures for this project"""
 
-from simulation import DBT1
+from simulation import DBT
 from data_structure.molecule import atom
-from typing import Generator
+from typing import Generator, Type
 
 def _Create_Atom(atom_type:str, *args)-> atom:
     """this function return an atom"""
     
     func = {'atom': atom,
-            'S': DBT1.Sulphur,
-            'C': DBT1.Carbon,
-            'H': DBT1.Hydrogen,
-            'N': DBT1.Nitrogen,
-            'O': DBT1.Oxygen}
+            'S': DBT.Sulphur,
+            'C': DBT.Carbon,
+            'H': DBT.Hydrogen,
+            'N': DBT.Nitrogen,
+            'O': DBT.Oxygen}
     
     return func[atom_type](*args)
 
@@ -37,7 +37,7 @@ def split(list_to_split:list,chunk_size:int)->Generator:
     for i in range(0,len(list_to_split), chunk_size):
         yield list_to_split[i:i+chunk_size]
 
-def _Gro_file_parser(filepath:str, chunk_size:int)->dict:
+def _Gro_file_parser(filepath:str, chunk_size:int, molecule:Type[DBT.DBT])->dict:
     """This function parse the .gro file and store the meta data in a dictionary"""
 
     with open(filepath, 'r') as f:
@@ -56,7 +56,7 @@ def _Gro_file_parser(filepath:str, chunk_size:int)->dict:
 
         list_of_groupped_atoms = [i for i in split(list_of_atoms, chunk_size)]
         
-        list_of_molecules = [DBT1.DBT1(atoms, f'{index}DBT') for index,atoms in enumerate(list_of_groupped_atoms)]
+        list_of_molecules = [molecule(atoms, f'{index}DBT') for index,atoms in enumerate(list_of_groupped_atoms)]
         
         return {'title': title, 
                 'timestamp': timestamp,

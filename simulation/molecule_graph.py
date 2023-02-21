@@ -1,12 +1,13 @@
 """This is the graph that will be used to track relationship between molecules in the simulation"""
+from typing import Any, Type
 from data_structure.graph import Graph, Vertex
-from simulation import DBT1, algorithm, molecule_relation
+from simulation import DBT, algorithm, molecule_relation
 
 class Molecule_vertex(Vertex):
     """This class stores the id of the molecule(name), the molecule itself, and the neighbour of the molecule in a dict
     the class is used for this project only"""
 
-    def __init__(self, node:DBT1.DBT1) -> None:
+    def __init__(self, node:DBT.DBT) -> None:
         
         self.id = node.__name__
         self.molecule = node
@@ -29,12 +30,11 @@ class Molecule_vertex(Vertex):
 class Molecule_graph(Graph):
     """This class stores the molecules as node and the relation as weight"""
 
-    molecule_length = DBT1.DBT1.length
-    
-    def __init__(self):
+    def __init__(self, molecule:Type[DBT.DBT]):
         super().__init__()
+        self.molecule_length = molecule.length
 
-    def add_vertex(self, node:DBT1.DBT1):
+    def add_vertex(self, node:DBT.DBT):
         """method to add a new vertex to the graph"""
 
         self.num_vertex +=1
@@ -42,17 +42,17 @@ class Molecule_graph(Graph):
         new_vertex = Molecule_vertex(node)
         self.vert_dict[new_vertex.get_id()] = new_vertex
 
-    def add_edge(self, frm:DBT1.DBT1, to:DBT1.DBT1, relation:molecule_relation.Relation):
+    def add_edge(self, frm:Any, to:Any, relation:molecule_relation.Relation):
         """
-        This method add the relation vertex to the graph, as this graph use DBT1 molecule as input,
+        This method add the relation vertex to the graph, as this graph use molecule as input,
         the name of the molecules and the value of the keys need to be handled.
 
         ** this class object does not store the molecule object in its dictionary, the molecular data is store in the vertex
 
         parameters:
 
-        frm - DBT1 molecule
-        to - DBT1 molecule
+        frm - molecule
+        to - molecule
         relation - the relation between the two molecule (the relation should be handle outside before adding the edge)
         """
 

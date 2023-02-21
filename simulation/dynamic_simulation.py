@@ -11,6 +11,7 @@ from simulation import coordinate_tracker
 import os
 import random
 import numpy as np
+import multiprocessing as mp
 
 class dynamic_simulation:
 
@@ -20,6 +21,8 @@ class dynamic_simulation:
         self.timeframe = 0
         self.total_jump = jumps
         self.coordinates = [[],[],[]]
+        self.time_array = []
+        self.square_displacement = []
         self.vector = np.array((0.0000,0.0000,0.0000))
 
     def inspect(self):
@@ -38,7 +41,7 @@ class dynamic_simulation:
         self.coordinates[0].append(initial_x)
         self.coordinates[1].append(initial_y)
         self.coordinates[2].append(initial_z)
-
+        self.time_array.append(0)
         for _ in range(self.total_jump):
             
             next_frame = algorithm.closest_value(list(self.frames_dict.keys()), self.timeframe)
@@ -54,7 +57,10 @@ class dynamic_simulation:
             self.coordinates[2].append(current_z)
             
             self.timeframe += jumping_time*1e12
+            self.time_array.append(self.timeframe)
+
             self.vector += np.array(vector)
+            self.square_displacement.append(np.sum(self.vector**2))
 
         print(f'total travel time = {self.timeframe} picosecond')
 
@@ -62,11 +68,28 @@ class dynamic_simulation:
         """This method export the trajectory data in numpy array to draw the trajectory"""
 
         return np.array(self.coordinates[0]), np.array(self.coordinates[1]), np.array(self.coordinates[2])
+    
+    def export_time_array(self):
 
-    def Plot_trajectory(self):
+        return np.array(self.time_array)
+    
+    def export_square_displacement(self):
+
+        return self.square_displacement
+
+    def Plot_diffusion(self):
+
+        coordinate_tracker.create_msd_gif(self.export_square_displacement(), self.export_time_array(), 'img_msd')
+
+    def Plot_trajectory(self, image_name):
         """This method plot the trajectory and save it into a file"""
 
-        coordinate_tracker.Plot_trajectory(*self.export_trajectory())
+        coordinate_tracker.Plot_trajectory(*self.export_trajectory(), image_name)
+    
+    def Plot_trajectory_gif(self, dir:str):
+        """This method generate gif for the trajectory"""
+
+        coordinate_tracker.create_trajectory_frames(*self.export_trajectory(), self.export_time_array(), dir)
 
 def build_dict(static_frames:list[simulation.Simulation])->dict:
     
@@ -79,7 +102,10 @@ def build_dict(static_frames:list[simulation.Simulation])->dict:
     return dict_to_return
 
 def build_dynamic_simulation(dir:str, cache_dir='./cache', no_of_jumps:int=10000):
-    """This function build the dynamic simulation object from a directory"""
+    """
+    This function build the dynamic simulation object from a directory
+    """
+    
 
     sim_list = []
     for file in os.listdir(dir):

@@ -22,14 +22,14 @@ class Relation:
         return Relation(self.distance, self.coulomb_matrix, translation)
  
 
-def create_relation(m1:DBT1.DBT1, m2:DBT1.DBT1,distance:float, Stride:float, translation: tuple[int, int, int])->Relation:
+def create_relation(m1:DBT.DBT, m2:DBT.DBT,distance:float, Stride:float, translation: tuple[int, int, int])->Relation:
     """This function creates the relation between 2 molecules"""
 
     CM = gen_cm_matrix(m1, m2, Stride, translation)
 
     return Relation(distance, CM, translation)
 
-def gen_cm_matrix(m1:DBT1.DBT1, m2:DBT1.DBT1, Stride:float, translation: tuple[int, int, int])->np.ndarray:
+def gen_cm_matrix(m1:DBT.DBT, m2:DBT.DBT, Stride:float, translation: tuple[int, int, int])->np.ndarray:
     """This function return the coulomb matrix"""
     
 
@@ -45,7 +45,10 @@ def gen_cm_matrix(m1:DBT1.DBT1, m2:DBT1.DBT1, Stride:float, translation: tuple[i
     y = y1 + y2
     z = z1 + z2
 
-    numerator_matrix = coulomb_matrix.gen_numerator_matrix(DBT1.DBT1.molecule_metadata)
+    numerator_matrix = coulomb_matrix.gen_numerator_matrix(m1.molecule_metadata)
+    #print(numerator_matrix.shape)
+    #print(type(m1))
+    #print(type(m2))
 
     CM_object = pair_coulomb_matrix(x, y, z, numerator_matrix)
     CM = CM_object.gen_full_coulomb_matrix()
