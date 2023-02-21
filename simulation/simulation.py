@@ -16,7 +16,7 @@ from simulation.molecule_graph import Molecule_graph as Graph
 from simulation.molecule_graph import Molecule_vertex
 
 #for model
-from simulation.model import random_model as prediction_model
+from simulation import model
 #import tensorflow as tf
 
 from itertools import combinations
@@ -27,149 +27,197 @@ from simulation.molecule_relation import Relation
 
 import gc
 
+def Define_simulation_model(model_name:str, total_jumps:int = 100000):
+    """
+    This function define the simulation class behaviour
 
-class Simulation:
-    """This class define how the simulation should be run from a single frame"""
+    arguments: 
 
-    prediction_model = prediction_model('/home/chunhou/Documents/FYP/simulation/model/coupling_dbt2.npy')
-    #prediction_model = prediction_model('/home/chunhou/Documents/FYP/simulation/model/cnn2d-deployment/')
-    #prediction_model = tf.keras.models.load_model('model/ANN1')
+    model_name[str] - name of the model
+
+        options:
+
+        random_model_dbt1
+        random_model_dbt2
+        random_model_dbt3
+        cnn_dbt1
+
+        **currently there is no trained model for dbt2 and dbt3 so only random model can be used
     
-    def __init__(self, gro_file:str, molecule:Type[DBT.DBT], cache_path:str= './cache', memory_saving:bool=False) -> None:
-        """
-        gro_file - the file path of the gromac file
-        cache_path - directory to cache the data (the file size is large)
-        memory_saving - set to true if a lot of memory is required
-        """
-        print('start building')
+    total_jumps[int] - maximum jumps to stop electron hopping to prevent simulation to run too long
         
-        self.__file__ = gro_file
-        self.graph, self.box_width, self.timestamp = extract_metadata(gro_file, molecule, cache_path )
-        self.total_jump = 100000
-        self.initial_box = np.array([0,0,0])
-        self.current_box = np.array([0,0,0])
-        self.time = 0
-        self.electron_coupling_list, self.electron_coupling_key = make_cache_prediction(self.graph, self.prediction_model)
-        self.molecule = molecule
+        default = 100000
         
-        print('done')
-        if memory_saving:
-
-            self.delete_coulomb_matrix()
-            print('memory saving enabled, coulomb matrix are deleted!')
-
-    def predicted_electron_coupling(self, key1, key2):
-
-        index = self.electron_coupling_key[(key1, key2)]
-        return self.electron_coupling_list[index]
-
-    def single_jump(self, key, reorganization_energy = 0.180):
-        """
-        this method do a single jump from a selected key
-        """
-
-        current_key = key
-        new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling, reorganization_energy)
-        translation = self.graph.get_vertex(current_key).get_weight(new_key).translation
-
-        initial_molecule = self.graph.get_vertex(current_key).molecule
-        final_molecule = self.graph.get_vertex(new_key).molecule
-
-        x0, y0, z0 = initial_molecule.center_coordinate(self.box_width, (0, 0, 0))
-        x1, y1, z1 = final_molecule.center_coordinate(self.box_width, translation)
+    return:
         
-        Vector = (x1-x0, y1-y0, z1-z0)
-        
-        print(f'{new_key=}, {jumping_time=}, {Vector=}')
+        Customized Simulation class
+        ** you need to used the return class object to construct the simulation object
 
-        return new_key, jumping_time, Vector
+    """
+
+    if model_name == "random_model_dbt1":
+
+        _prediction_model = model.random_model('./simulation/model/coupling_dbt1.npy')
+
+    elif model_name == "random_model_dbt2":
+
+        _prediction_model = model.random_model('./simulation/model/coupling_dbt2.npy')
+
+    elif model_name == "random_model_dbt3":
+
+        _prediction_model = model.random_model('./simulation/model/coupling_dbt3.npy')
+
+    elif model_name == "cnn_dbt1":
+
+        _prediction_model = model.prediction_model('./simulation/model/cnn_dbt1.h5')
     
-    def run(self):
-        """this method run the simulation for electron jumps in the periodic space"""
+    else:
+
+        print('invalid option')
+        _prediction_model = model.random_model('./simulation/model/coupling_dbt1.npy')
+    
+    class Simulation:
+        """This class define how the simulation should be run from a single frame"""
         
-        #start by choosing a random molecule - vertex
+        prediction_model = _prediction_model
 
-        initial_key = random.choice([ i for i in self.graph.get_vertices()])
-        initial_box = np.array([0,0,0])
-        
-        print('simulation starting from molecule {}'.format(self.graph.get_vertex(initial_key).id))
-
-        current_key = initial_key
-
-        current_time = 0
-        current_box = np.array([0,0,0])
-        
-        displacement_list = []
-        time_list = []
-
-        for i in range(self.total_jump):
-                
-            new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling, self.molecule.reorganization_energy)
+        def __init__(self, gro_file:str, molecule:Type[DBT.DBT], cache_path:str= './cache', memory_saving:bool=False) -> None:
+            """
+            gro_file - the file path of the gromac file
+            cache_path - directory to cache the data (the file size is large)
+            memory_saving - set to true if a lot of memory is required
+            """
+            print('start building')
             
-            current_time += jumping_time
+            self.__file__ = gro_file
+            self.graph, self.box_width, self.timestamp = extract_metadata(gro_file, molecule, cache_path )
+            self.total_jump = total_jumps
+            self.initial_box = np.array([0,0,0])
+            self.current_box = np.array([0,0,0])
+            self.time = 0
+            self.electron_coupling_list, self.electron_coupling_key = make_cache_prediction(self.graph, self.prediction_model)
+            self.molecule = molecule
+            
+            print('done')
+            if memory_saving:
 
+                self.delete_coulomb_matrix()
+                print('memory saving enabled, coulomb matrix are deleted!')
+
+        def predicted_electron_coupling(self, key1, key2):
+
+            index = self.electron_coupling_key[(key1, key2)]
+            return self.electron_coupling_list[index]
+
+        def single_jump(self, key, reorganization_energy = 0.180):
+            """
+            this method do a single jump from a selected key
+            """
+
+            current_key = key
+            new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling, reorganization_energy)
             translation = self.graph.get_vertex(current_key).get_weight(new_key).translation
 
-            current_box += translation
-            #if np.sum(abs(np.array(translation)))>=1:
+            initial_molecule = self.graph.get_vertex(current_key).molecule
+            final_molecule = self.graph.get_vertex(new_key).molecule
 
-            #    print(f'large translation found! {translation}')
+            x0, y0, z0 = initial_molecule.center_coordinate(self.box_width, (0, 0, 0))
+            x1, y1, z1 = final_molecule.center_coordinate(self.box_width, translation)
+            
+            Vector = (x1-x0, y1-y0, z1-z0)
+            
+            print(f'{new_key=}, {jumping_time=}, {Vector=}')
 
-            current_key = new_key
+            return new_key, jumping_time, Vector
+        
+        def run(self):
+            """this method run the simulation for electron jumps in the periodic space"""
+            
+            #start by choosing a random molecule - vertex
 
-#            if np.sum(abs(current_box)>=10):
-#                
-#                print(abs(current_box))
-#                print(abs(current_box)>=10)
-#                print(np.sum(abs(current_box)>=10))
-#
-#                break
-#            if current_time >= 2e-10:
-#                
-#                print('simulation time limit reached')
-#                break
+            initial_key = random.choice([ i for i in self.graph.get_vertices()])
+            initial_box = np.array([0,0,0])
+            
+            print('simulation starting from molecule {}'.format(self.graph.get_vertex(initial_key).id))
 
+            current_key = initial_key
+
+            current_time = 0
+            current_box = np.array([0,0,0])
+            
+            displacement_list = []
+            time_list = []
+
+            for i in range(self.total_jump):
+                    
+                new_key, jumping_time = jump(self.graph, current_key, self.predicted_electron_coupling, self.molecule.reorganization_energy)
+                
+                current_time += jumping_time
+
+                translation = self.graph.get_vertex(current_key).get_weight(new_key).translation
+
+                current_box += translation
+                #if np.sum(abs(np.array(translation)))>=1:
+
+                #    print(f'large translation found! {translation}')
+
+                current_key = new_key
+
+    #            if np.sum(abs(current_box)>=10):
+    #                
+    #                print(abs(current_box))
+    #                print(abs(current_box)>=10)
+    #                print(np.sum(abs(current_box)>=10))
+    #
+    #                break
+    #            if current_time >= 2e-10:
+    #                
+    #                print('simulation time limit reached')
+    #                break
+
+                initial_molecule = self.graph.get_vertex(initial_key).molecule
+                current_molecule = self.graph.get_vertex(current_key).molecule
+
+                Coord1 = initial_molecule.center_coordinate(self.box_width, tuple(initial_box))
+                Coord2 = current_molecule.center_coordinate(self.box_width, tuple(current_box))
+
+                distance = DBT.cartesian_distance(Coord1[0], Coord2[0], Coord1[1], Coord2[1], Coord1[2], Coord2[2])
+
+                displacement_list.append(distance)
+                time_list.append(current_time)
+
+                if current_time >= 1e-9:
+                
+                    print(f'simulation time reached! number of jumps = {i}')
+                    break
+
+            print(f'final box = {current_box}')
+            
             initial_molecule = self.graph.get_vertex(initial_key).molecule
-            current_molecule = self.graph.get_vertex(current_key).molecule
+            final_molecule = self.graph.get_vertex(current_key).molecule
 
             Coord1 = initial_molecule.center_coordinate(self.box_width, tuple(initial_box))
-            Coord2 = current_molecule.center_coordinate(self.box_width, tuple(current_box))
+            Coord2 = final_molecule.center_coordinate(self.box_width, tuple(current_box))
 
             distance = DBT.cartesian_distance(Coord1[0], Coord2[0], Coord1[1], Coord2[1], Coord1[2], Coord2[2])
 
-            displacement_list.append(distance)
-            time_list.append(current_time)
+            print(f'distance travelled = {distance}')
+            print(f'time taken = {current_time}')
 
-            if current_time >= 1e-9:
+            return displacement_list, time_list
+        
+        def delete_coulomb_matrix(self)->None:
+            """This method is used to delete coulomb matrix from the graph so that memory can be freed"""
+
+            for vertex in self.graph:
+
+                for relation in vertex.adjacent.values():
+
+                    del relation.coulomb_matrix
             
-                print(f'simulation time reached! number of jumps = {i}')
-                break
+            gc.collect
 
-        print(f'final box = {current_box}')
-        
-        initial_molecule = self.graph.get_vertex(initial_key).molecule
-        final_molecule = self.graph.get_vertex(current_key).molecule
-
-        Coord1 = initial_molecule.center_coordinate(self.box_width, tuple(initial_box))
-        Coord2 = final_molecule.center_coordinate(self.box_width, tuple(current_box))
-
-        distance = DBT.cartesian_distance(Coord1[0], Coord2[0], Coord1[1], Coord2[1], Coord1[2], Coord2[2])
-
-        print(f'distance travelled = {distance}')
-        print(f'time taken = {current_time}')
-
-        return displacement_list, time_list
-    
-    def delete_coulomb_matrix(self)->None:
-        """This method is used to delete coulomb matrix from the graph so that memory can be freed"""
-
-        for vertex in self.graph:
-
-            for relation in vertex.adjacent.values():
-
-                del relation.coulomb_matrix
-        
-        gc.collect
+    return Simulation
 
 def make_cache_prediction(graph:Graph, prediction_model):
     """This function make the cache for the model prediction"""
