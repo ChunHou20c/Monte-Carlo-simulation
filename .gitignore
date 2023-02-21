@@ -17,3 +17,4 @@ cache/*
 dynamic_frames/*
 *.png
 *.csv
+simulation/model/__pycache__
