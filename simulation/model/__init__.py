@@ -6,9 +6,9 @@ import numpy as np
 class random_model:
     """This is the model that returns random electronic coupling from training dataset"""
 
-    def __init__(self, *args) -> None:
+    def __init__(self, data_file:str,*args) -> None:
         
-        self.data = np.load('/home/chunhou/Documents/FYP/simulation/model/label.npy')
+        self.data = np.load(data_file)
 
     def predict(self, matrix):
         """
