@@ -1,0 +1,8 @@
+imageio==2.24.0
+matplotlib==3.6.3
+numpy==1.22.0
+pandas==1.4.3
+python-decouple==3.7
+scikit_learn==1.2.1
+seaborn==0.12.2
+tensorflow==2.11.0
