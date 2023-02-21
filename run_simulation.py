@@ -5,9 +5,10 @@ from simulation import simulation
 import pandas as pd
 from simulation import DBT1
 import os
+from decouple import config
 
 Simulation = simulation.Define_simulation_model('cnn_dbt1')
-test_sim = Simulation('Frames/DBT1-static.gro', DBT1.DBT1, memory_saving=True)
+test_sim = Simulation('Frames/DBT1-static.gro', DBT1.DBT1, memory_saving=True, cache_path=config('CACHE_PATH'))
 
 path = "result_dbt1"
 # Check whether the specified path exists or not
