@@ -1,6 +1,12 @@
 # Monte-Carlo-simulation
 This repo contains the code used for Monte Carlo Simulation in DBT molecules using trained machine learning model
 
+## Electron trajectory of a single run
+![](https://github.com/ChunHou20c/Monte-Carlo-simulation/electron_traj_reduced.gif)
+
+## Monte-Carlo simulation
+![](https://github.com/ChunHou20c/Monte-Carlo-simulation/reduced.gif)
+
 ## Installation
 First clone the repo
 ```
